@@ -1,0 +1,31 @@
+# A Planet is a large mass, planet, or planetoid in the Star Wars universe, at the time of 0 ABY.
+type Planet {
+  # A unique identifier.
+  id: ID!
+  # The name of this planet.
+  name: String!
+  # The diameter of this planet in the provided units.
+  diameter(unit: LengthUnit = KILOMETER): Float!
+  # The number of standard hours it takes for this planet to complete a single rotation on its axis.
+  rotationPeriod: Float!
+  # The number of standard days it takes for this planet to complete a single orbit of its local star.
+  orbitalPeriod: Float!
+  # A number denoting the gravity of this planet, where 1.0 is normal or 1 standard G.
+  gravity: Float!
+  # The average population of sentient beings inhabiting this planet.
+  population: Int!
+  # A list of the climates found on this planet.
+  climates: [String!]!
+  # A list of the terrains found on this planet.
+  terrains: [String!]!
+  # The percentage 0.0-100.0 of the planet surface that is naturally occurring water or bodies of water.
+  surfaceWaterPercentage: Float!
+  # A list of notable people who live on this planet.
+  residents: [Person]!
+  # A list of films this planet has appeared in.
+  films: [Film]!
+  # The RFC3339 date format of the time that this resource was created.
+  createdAt: Time!
+  # The RFC3339 date format of the time that this resource was edited.
+  editedAt: Time
+}

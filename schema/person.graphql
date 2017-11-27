@@ -1,0 +1,39 @@
+# A person is an individual character within the Star Wars universe.
+type Person {
+  # A unique identifier.
+  id: ID!
+  # The name of this person.
+  name: String!
+  # The birth year of the person, using the in-universe standard of BBY of ABY.
+  # That is, Before the Battle of Yavin or After the Battle of Yavin.
+  # The Battle of Yavin is a battle that occurs at the end of Star Wars Episode IV: A New Hope.
+  birthYear: String!
+  # The eye color of this person.
+  # Value will be "unknown" if not known or null if the person does not have an eye.
+  eyeColor: String
+  # The gender of this person.
+  # Either "male", "female", or "unknown". Null if the person does not have a gender.
+  gender: String
+  # The hair color of this person.
+  # Value will be "unknown" if not known or null if the person does not have hair.
+  hairColor: String
+  # The height of the person in the specified unit.
+  height(unit: LengthUnit = CENTIMETER): Float!
+  # The mass of the person in the specified unit.
+  mass(unit: MassUnit = KILOGRAM): Float!
+  # The skin color of this person.
+  # Value will be "unknown" if not known of null if ther person does not have skin.
+  skinColor: String
+  # The planet this person was born on or inhabits.
+  homeworld: Planet
+  # A list of the films this person has been in.
+  films: [Film]!
+  # A list of species this person belongs to.
+  species: [Species]!
+  # A list of vehicles this person has piloted.
+  vehicles: [Vehicle]!
+  # The RFC3339 date format of the time this resource was created.
+  createdAt: Time!
+  # The RFC3339 date format of the time this resource was edited.
+  editedAt: Time
+}

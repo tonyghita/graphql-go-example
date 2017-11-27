@@ -1,0 +1,11 @@
+# A MassUnit is a measure of a physical body.
+enum MassUnit {
+  # A gram is a unit of mass in the metric system equal to 1/1000 of a kilogram.
+  GRAM
+  # A kilogram is the base unit of mass in the metric system.
+  KILOGRAM
+  # A metric ton is unit of mass in the metric system equal to 1000 kilograms.
+  METRIC_TON
+  # A pound is a unit of mass in the imperial system equal to 0.43559237 kilograms.
+  POUND
+}

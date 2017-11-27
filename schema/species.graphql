@@ -1,0 +1,36 @@
+# A Species is a type of person or character within the Star Wars universe.
+type Species {
+  # A unique identifier.
+  id: ID!
+  # The name of this species.
+  name: String!
+  # The classification of this species, such as "mammal" or "reptile".
+  classification: String!
+  # The designation of this species
+  designation: String!
+  # The average height of this species in the specified length unit.
+  averageHeight(unit: LengthUnit = CENTIMETER): Float!
+  # The average lifespan of this species in Earth years.
+  averageLifespan: Float!
+  # A list of common eye colors for this species.
+  # Empty if this species does not typically have eyes.
+  eyeColors: [String!]!
+  # A list of common hair colors for this species.
+  # Empty if this species does not typically have hair.
+  hairColors: [String!]!
+  # A list of common skin colors for this species.
+  # Empty if this species typically does not have skin.
+  skinColors: [String!]!
+  # The language commonly spoken by this species.
+  language: String!
+  # The planet this species originates from.
+  homeworld: Planet
+  # A list of characters that are a part of this species.
+  characters: [Person]!
+  # A list of films that this species has appeared in.
+  films: [Film]!
+  # The RFC3339 date format of the time this resource was created.
+  createdAt: Time!
+  # The RFC3339 date format of the time this resource was edited.
+  editedAt: Time
+}

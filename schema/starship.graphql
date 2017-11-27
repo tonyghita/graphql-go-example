@@ -1,0 +1,41 @@
+# A Starship is a single transport craft that has hyperdrive capability.
+type Starship {
+  # A unique identifier.
+  id: ID!
+  # The common name of the this startship (example: "Death Star").
+  name: String!
+  # The model or official name of this starship (example: "T-65 X-wing").
+  model: String!
+  # The class of this starship, such as "Starfighter".
+  class: String!
+  # A list of the manufacturer names of this starship.
+  manufacturers: [String!]!
+  # The cost of this starship new, in galactic credits.
+  cost: Int!
+  # The length of this starship in the specified units.
+  length(unit: LengthUnit = METER): Float!
+  # The number of personnel needed to run or pilot this starship.
+  crewSize: Int!
+  # The number of non-essential people this starship can transport.
+  passengerCapacity: Int!
+  # The maximum speed of this starship in the atmosphere.
+  # Null if this starship is incapable of atmospheric flight.
+  maxAtmosphericSpeed: Int
+  # The class of this starship's hyperdrive.
+  hyperdriveRating: Float
+  # The maximum number of Megalights this starship can travel in a standard hour.
+  maxMegalightsPerHour: Int!
+  # The maximum amount of mass this starship can transport.
+  cargoCapacity(unit: MassUnit = KILOGRAM): Float!
+  # The maximum length of time that this starship can provide consumables for its entire crew without
+  # having to resupply.
+  consumablesDuration: String!
+  # A list of films that this starship has appeared in.
+  films: [Film]!
+  # A list of people that have piloted this starship.
+  pilots: [Person]!
+  # The RFC3339 date format of the time that this resource was created.
+  createdAt: Time!
+  # The RFC3339 date format of the time that this resource was edited.
+  editedAt: Time
+}

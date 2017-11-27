@@ -1,0 +1,20 @@
+# A LengthUnit refers to a discrete, pre-established length or distance having a constant magnitude
+# which is used as a reference or convention to express linear dimension.
+enum LengthUnit {
+  # A millimeter is a unit of length in the metric system, equal to 1/1000 of a meter.
+  MILLIMETER
+  # A centimeter is a unit of length in the metric system, equal to 1/100 of a meter.
+  CENTIMETER
+  # A meter is defined as the length of the path traveled by light in a vacuum in 1/299792458 seconds.
+  METER
+  # A kilometer is a unit of length in the metric system, equal to 1000 meters.
+  KILOMETER
+  # An inch is a unit of length in the imperial system equal to 1/36 of a yard.
+  INCH
+  # A foot is a unit of length in the imperial system equal to 1/3 of a yard.
+  FOOT
+  # A yard is a unit of length in the imperial system equal to exactly 0.9144 meters.
+  YARD
+  # A mile is a unit of length of linear measure in the imperial system equal to 1760 yards.
+  MILE
+}

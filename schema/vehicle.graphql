@@ -1,0 +1,36 @@
+# A Vehicle is a single transport craft that does not have hyperdrive capability.
+type Vehicle {
+  # A unique identifier.
+  id: ID!
+  # The common name of this vehicle (example: "Sand Crawler").
+  name: String!
+  # The model or official name of this vehicle (example: "All-Terrain Attack Transport").
+  model: String!
+  # The class of this vehicle (example: "Wheeled" or "Repulsorcraft").
+  class: String!
+  # A list of the manufacturers of this vehicle.
+  manufacturers: [String!]!
+  # The length of this vehicle in provided units.
+  length(unit: LengthUnit = METER): Float!
+  # The cost of this vehicle new, in galactic credits.
+  cost: Int!
+  # The number of personnel needed to run or pilot this vehicle.
+  crewSize: Int!
+  # The number of non-essential people this vehicle can transport.
+  passengerCapacity: Int!
+  # The maximum speed of this vehicle in the atmoshpere.
+  maxAtmosphericSpeed: Float!
+  # The maximum number of kilograms that this vehicle can transport.
+  cargoCapacity(unit: MassUnit = KILOGRAM): Float!
+  # The maximum length of time that this vehicle can provide consumables for its entire crew without
+  # having to resupply.
+  consumablesDuration: String!
+  # A list of films that this vehicle has appeared in.
+  films: [Film]!
+  # A list of people that have piloted this vehicle.
+  pilots: [Person]!
+  # The RFC3339 date format of the time that this resource was created.
+  createdAt: Time!
+  # The RFC3339 date format of the time that this resource was edited.
+  editedAt: Time
+}

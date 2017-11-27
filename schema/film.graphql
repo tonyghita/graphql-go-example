@@ -1,0 +1,29 @@
+# A Star Wars film.
+type Film {
+  # A unique identifier.
+  id: ID!
+  # The episode number of this film.
+  episode: Int!
+  # The opening paragraphs at the beginning of this film.
+  openingCrawl: String!
+  # The name of this film's director.
+  directorName: String!
+  # A list of names of the film's producers.
+  producerNames: [String!]!
+  # The RFC3339 date format of the film release in the orginal creator country.
+  releaseDate: Time!
+  # A list of species that are in this film.
+  species: [Species]!
+  # A list of starships that are in this film.
+  starships: [Starship]!
+  # A list of vehicles that are in this film.
+  vehicles: [Vehicle]!
+  # A list of characters that are in this film.
+  characters: [Person]!
+  # A list of planets that are in this film.
+  planets: [Planet]!
+  # The RFC3339 date format of the time that this resource was created.
+  createdAt: Time!
+  # The RFC3339 date format of the time that this resource was edited.
+  editedAt: Time
+}
