@@ -3,14 +3,13 @@ package errors
 
 import (
 	"bytes"
-	goerrors "errors"
 	"fmt"
+
+	pkgerrors "github.com/pkg/errors"
 )
 
-// Errors ...
 type Errors []error
 
-// Err ...
 func (e Errors) Err() error {
 	if len(e) == 0 {
 		return nil
@@ -19,7 +18,6 @@ func (e Errors) Err() error {
 	return e
 }
 
-// Error ...
 func (e Errors) Error() string {
 	var buf bytes.Buffer
 
@@ -40,8 +38,7 @@ func (e Errors) Error() string {
 	return buf.String()
 }
 
-// New ...
 // This is convenience method so we don't have to fight with package imports.
 func New(message string) error {
-	return goerrors.New(message)
+	return pkgerrors.New(message)
 }
