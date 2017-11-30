@@ -45,6 +45,48 @@ func LoadPerson(ctx context.Context, url string) (swapi.Person, error) {
 	return person, nil
 }
 
+func LoadPeople(ctx context.Context, urls []string) ([]swapi.Person, error) {
+	l, err := Extract(ctx, PeopleByURLs)
+	if err != nil {
+		return []swapi.Person{}, err
+	}
+
+	data, loadErrors := l.LoadMany(ctx, urls)()
+
+	var (
+		people = make([]swapi.Person, 0, len(data))
+		errs   = make(errors.Errors, 0, len(loadErrors))
+	)
+
+	for i := range urls {
+		d, err := data[i], loadErrors[i]
+		if err != nil {
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
+		person, ok := d.(swapi.Person)
+		if !ok && err == nil {
+			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
+		}
+
+		people = append(people, person)
+	}
+
+	return people, errs.Err()
+}
+
+func PrimePeople(ctx context.Context, page swapi.PersonPage) error {
+	l, err := Extract(ctx, PeopleByURLs)
+	if err != nil {
+		return err
+	}
+
+	for _, person := range page.People {
+		l.Prime(person.URL, person)
+	}
+	return nil
+}
+
 func (l PersonLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)

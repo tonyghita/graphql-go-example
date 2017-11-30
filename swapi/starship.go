@@ -31,6 +31,14 @@ type StarshipPage struct {
 	Starships []Starship `json:"results"`
 }
 
+func (p StarshipPage) URLs() []string {
+	urls := make([]string, 0, len(p.Starships))
+	for _, s := range p.Starships {
+		urls = append(urls, s.URL)
+	}
+	return urls
+}
+
 func (c *Client) Starship(ctx context.Context, url string) (Starship, error) {
 	r, err := c.NewRequest(ctx, url)
 	if err != nil {

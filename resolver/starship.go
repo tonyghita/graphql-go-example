@@ -18,17 +18,23 @@ type StarshipResolver struct {
 	ship swapi.Starship
 }
 
-// NewStarshipArgs ...
 type NewStarshipArgs struct {
-	URL string
+	Ship swapi.Starship
+	URL  string
 }
 
-// NewStarship ...
+type NewStarshipsArgs struct {
+	Page swapi.StarshipPage
+	URLs []string
+}
+
 func NewStarship(ctx context.Context, args NewStarshipArgs) (*StarshipResolver, error) {
 	var ship swapi.Starship
 	var err error
 
 	switch {
+	case args.Ship.URL != "":
+		ship = args.Ship
 	case args.URL != "":
 		ship, err = loader.LoadStarship(ctx, args.URL)
 	default:
@@ -40,6 +46,30 @@ func NewStarship(ctx context.Context, args NewStarshipArgs) (*StarshipResolver, 
 	}
 
 	return &StarshipResolver{ship: ship}, nil
+}
+
+func NewStarships(ctx context.Context, args NewStarshipsArgs) ([]*StarshipResolver, error) {
+	loader.PrimeStarships(ctx, args.Page)
+
+	ships, err := loader.LoadStarships(ctx, append(args.URLs, args.Page.URLs()...))
+	if err != nil {
+		// TODO: improve error handling.
+		return []*StarshipResolver{}, err
+	}
+
+	var resolvers = make([]*StarshipResolver, 0, len(ships))
+	var errs errors.Errors
+
+	for i, ship := range ships {
+		resolver, err := NewStarship(ctx, NewStarshipArgs{Ship: ship})
+		if err != nil {
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
+		resolvers = append(resolvers, resolver)
+	}
+
+	return resolvers, errs.Err()
 }
 
 // ID resolves ...

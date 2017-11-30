@@ -23,29 +23,6 @@ func NewFilmLoader(client FilmGetter) dataloader.BatchFunc {
 	return FilmLoader{get: client}.loadBatch
 }
 
-func (loader FilmLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
-	var (
-		n       = len(urls)
-		results = make([]*dataloader.Result, n)
-		wg      sync.WaitGroup
-	)
-
-	wg.Add(n)
-
-	for i, url := range urls {
-		go func(i int, url string) {
-			resp, err := loader.get.Film(ctx, url)
-			results[i] = &dataloader.Result{Data: resp, Error: err}
-			wg.Done()
-		}(i, url)
-	}
-
-	wg.Wait()
-
-	return results
-}
-
-// LoadFilm ...
 func LoadFilm(ctx context.Context, url string) (swapi.Film, error) {
 	var film swapi.Film
 
@@ -54,8 +31,7 @@ func LoadFilm(ctx context.Context, url string) (swapi.Film, error) {
 		return film, err
 	}
 
-	loadFn := l.Load(ctx, url)
-	data, err := loadFn()
+	data, err := l.Load(ctx, url)()
 	if err != nil {
 		return film, err
 	}
@@ -68,8 +44,7 @@ func LoadFilm(ctx context.Context, url string) (swapi.Film, error) {
 	return film, nil
 }
 
-// LoadFilms ...
-func LoadFilms(ctx context.Context, urls ...string) ([]swapi.Film, error) {
+func LoadFilms(ctx context.Context, urls []string) ([]swapi.Film, error) {
 	l, err := Extract(ctx, FilmsByURLs)
 	if err != nil {
 		return []swapi.Film{}, err
@@ -83,12 +58,7 @@ func LoadFilms(ctx context.Context, urls ...string) ([]swapi.Film, error) {
 	)
 
 	for i := range urls {
-		var (
-			d    = data[i]
-			err  = loadErrors[i]
-			film swapi.Film
-		)
-
+		d, err := data[i], loadErrors[i]
 		if err != nil {
 			errs = append(errs, errors.WithIndex(err, i))
 		}
@@ -115,4 +85,26 @@ func PrimeFilms(ctx context.Context, page swapi.FilmPage) error {
 		l.Prime(f.URL, f)
 	}
 	return nil
+}
+
+func (loader FilmLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+	var (
+		n       = len(urls)
+		results = make([]*dataloader.Result, n)
+		wg      sync.WaitGroup
+	)
+
+	wg.Add(n)
+
+	for i, url := range urls {
+		go func(i int, url string) {
+			resp, err := loader.get.Film(ctx, url)
+			results[i] = &dataloader.Result{Data: resp, Error: err}
+			wg.Done()
+		}(i, url)
+	}
+
+	wg.Wait()
+
+	return results
 }

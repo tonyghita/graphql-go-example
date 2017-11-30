@@ -26,10 +26,20 @@ type PlanetPage struct {
 	Planets []Planet `json:"results"`
 }
 
+func (p PlanetPage) URLs() []string {
+	urls := make([]string, 0, len(p.Planets))
+	for _, planet := range p.Planets {
+		urls = append(urls, planet.URL)
+	}
+	return urls
+}
+
 func (c *Client) Planet(ctx context.Context, url string) (Planet, error) {
+	// TODO: implement
 	return Planet{}, nil
 }
 
 func (c *Client) SearchPlanets(ctx context.Context, name string) (PlanetPage, error) {
+	// TODO: implement
 	return PlanetPage{}, nil
 }

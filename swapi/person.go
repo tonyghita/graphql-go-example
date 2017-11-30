@@ -29,6 +29,14 @@ type PersonPage struct {
 	People []Person `json:"results"`
 }
 
+func (p PersonPage) URLs() []string {
+	urls := make([]string, 0, len(p.People))
+	for _, person := range p.People {
+		urls = append(urls, person.URL)
+	}
+	return urls
+}
+
 func (c *Client) Person(ctx context.Context, url string) (Person, error) {
 	r, err := c.NewRequest(ctx, url)
 	if err != nil {

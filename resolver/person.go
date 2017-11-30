@@ -17,19 +17,17 @@ type PersonResolver struct {
 	person swapi.Person
 }
 
-// NewPersonArgs ...
 type NewPersonArgs struct {
 	Person swapi.Person
 	URL    string
 }
 
 type NewPeopleArgs struct {
+	Page swapi.PersonPage
 	URLs []string
 }
 
-// Load acts on the contained arguments (args) to load the specified person.
-// TODO: not sure if this extra abstraction helps or hurts... the constructor code is nicer.
-func (args NewPersonArgs) Load(ctx context.Context) (swapi.Person, error) {
+func NewPerson(ctx context.Context, args NewPersonArgs) (*PersonResolver, error) {
 	var person swapi.Person
 	var err error
 
@@ -42,12 +40,6 @@ func (args NewPersonArgs) Load(ctx context.Context) (swapi.Person, error) {
 		err = errors.UnableToResolve
 	}
 
-	return person, err
-}
-
-// NewPerson ...
-func NewPerson(ctx context.Context, args NewPersonArgs) (*PersonResolver, error) {
-	person, err := args.Load(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -56,19 +48,21 @@ func NewPerson(ctx context.Context, args NewPersonArgs) (*PersonResolver, error)
 }
 
 func NewPeople(ctx context.Context, args NewPeopleArgs) ([]*PersonResolver, error) {
-	l, err := loader.Extract(ctx, loader.PeopleByURLs)
+	loader.PrimePeople(ctx, args.Page)
+
+	people, err := loader.LoadPeople(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
-		return []*PersonResolver{}, nil
+		// TODO: this error handling will have to be a bit more sophisticated.
+		// When all URLs provided fail to load people, return a consolidated error.
+		// Otherwise, filter out errored results.
+		return []*PersonResolver{}, err
 	}
 
-	// Batch requests for people to avoid loading data in serial.
-	l.LoadMany(ctx, args.URLs)
-
-	var resolvers = make([]*PersonResolver, len(args.URLs))
+	var resolvers = make([]*PersonResolver, len(people))
 	var errs errors.Errors
 
-	for i, url := range args.URLs {
-		r, err := NewPerson(ctx, NewPersonArgs{URL: url})
+	for i, person := range people {
+		r, err := NewPerson(ctx, NewPersonArgs{Person: person})
 		if err != nil {
 			errs = append(errs, errors.WithIndex(err, i))
 		}

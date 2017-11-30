@@ -45,12 +45,12 @@ func (r QueryResolver) People(ctx context.Context, args PeopleQueryArgs) ([]*Per
 		name = *args.Name
 	}
 
-	_, err := r.Client.SearchPerson(ctx, name)
+	page, err := r.Client.SearchPerson(ctx, name)
 	if err != nil {
-		return []*PersonResolver{}, nil
+		return []*PersonResolver{}, err
 	}
 
-	return []*PersonResolver{}, nil
+	return NewPeople(ctx, NewPeopleArgs{Page: page})
 }
 
 // PlanetsQueryArgs are the arguments for the "planets" query.
@@ -66,12 +66,12 @@ func (r QueryResolver) Planets(ctx context.Context, args PlanetsQueryArgs) ([]*P
 		name = *args.Name
 	}
 
-	_, err := r.Client.SearchPlanets(ctx, name)
+	page, err := r.Client.SearchPlanets(ctx, name)
 	if err != nil {
 		return []*PlanetResolver{}, err
 	}
 
-	return []*PlanetResolver{}, nil
+	return NewPlanets(ctx, NewPlanetsArgs{Page: page})
 }
 
 // SpeciesQueryArgs are the arguments for the "species" query.
@@ -87,12 +87,12 @@ func (r QueryResolver) Species(ctx context.Context, args SpeciesQueryArgs) ([]*S
 		name = *args.Name
 	}
 
-	_, err := r.Client.SearchSpecies(ctx, name)
+	page, err := r.Client.SearchSpecies(ctx, name)
 	if err != nil {
 		return []*SpeciesResolver{}, err
 	}
 
-	return []*SpeciesResolver{}, nil
+	return NewSpeciesList(ctx, NewSpeciesListArgs{Page: page})
 }
 
 type StarshipsQueryArgs struct {
@@ -106,12 +106,12 @@ func (r QueryResolver) Starships(ctx context.Context, args StarshipsQueryArgs) (
 		name = *args.Name
 	}
 
-	_, err := r.Client.SearchStarships(ctx, name)
+	page, err := r.Client.SearchStarships(ctx, name)
 	if err != nil {
 		return []*StarshipResolver{}, err
 	}
 
-	return []*StarshipResolver{}, nil
+	return NewStarships(ctx, NewStarshipsArgs{Page: page})
 }
 
 type VehiclesQueryArgs struct {
@@ -125,10 +125,10 @@ func (r QueryResolver) Vehicles(ctx context.Context, args VehiclesQueryArgs) ([]
 		name = *args.Name
 	}
 
-	_, err := r.Client.SearchVehicles(ctx, name)
+	page, err := r.Client.SearchVehicles(ctx, name)
 	if err != nil {
 		return []*VehicleResolver{}, nil
 	}
 
-	return []*VehicleResolver{}, nil
+	return NewVehicles(ctx, NewVehiclesArgs{Page: page})
 }

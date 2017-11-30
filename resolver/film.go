@@ -40,7 +40,7 @@ func NewFilm(ctx context.Context, args NewFilmArgs) (*FilmResolver, error) {
 	case args.URL != "":
 		film, err = loader.LoadFilm(ctx, args.URL)
 	default:
-		err = errors.New("unable to resolve")
+		err = errors.UnableToResolve
 	}
 
 	if err != nil {
@@ -54,8 +54,9 @@ func NewFilm(ctx context.Context, args NewFilmArgs) (*FilmResolver, error) {
 func NewFilms(ctx context.Context, args NewFilmsArgs) ([]*FilmResolver, error) {
 	loader.PrimeFilms(ctx, args.Page)
 
-	films, err := loader.LoadFilms(ctx, append(args.URLs, args.Page.URLs()...)...)
+	films, err := loader.LoadFilms(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
+		// TODO: Improve error handling logic here.
 		return []*FilmResolver{}, err
 	}
 
@@ -68,7 +69,7 @@ func NewFilms(ctx context.Context, args NewFilmsArgs) ([]*FilmResolver, error) {
 			errs = append(errs, errors.WithIndex(err, i))
 		}
 
-		resolvers[i] = resolver
+		resolvers = append(resolvers, resolver)
 	}
 
 	return resolvers, errs.Err()

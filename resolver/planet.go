@@ -19,15 +19,28 @@ type PlanetResolver struct {
 }
 
 type NewPlanetArgs struct {
-	URL string
+	Planet swapi.Planet
+	URL    string
 }
 
 type NewPlanetsArgs struct {
+	Page swapi.PlanetPage
 	URLs []string
 }
 
 func NewPlanet(ctx context.Context, args NewPlanetArgs) (*PlanetResolver, error) {
-	planet, err := loader.LoadPlanet(ctx, args.URL)
+	var planet swapi.Planet
+	var err error
+
+	switch {
+	case args.Planet.URL != "":
+		planet = args.Planet
+	case args.URL != "":
+		planet, err = loader.LoadPlanet(ctx, args.URL)
+	default:
+		err = errors.UnableToResolve
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -36,15 +49,19 @@ func NewPlanet(ctx context.Context, args NewPlanetArgs) (*PlanetResolver, error)
 }
 
 func NewPlanets(ctx context.Context, args NewPlanetsArgs) ([]*PlanetResolver, error) {
-	// TODO: validate arguments
-	// Request a batch to avoid sequentially loading when creating individual resolvers.
-	loader.LoadPlanets(ctx, args.URLs)
+	loader.PrimePlanets(ctx, args.Page)
+
+	planets, err := loader.LoadPlanets(ctx, append(args.URLs, args.Page.URLs()...))
+	if err != nil {
+		// TODO: Improve error handling.
+		return []*PlanetResolver{}, err
+	}
 
 	var resolvers = make([]*PlanetResolver, len(args.URLs))
 	var errs errors.Errors
 
-	for i, url := range args.URLs {
-		r, err := NewPlanet(ctx, NewPlanetArgs{URL: url})
+	for i, planet := range planets {
+		r, err := NewPlanet(ctx, NewPlanetArgs{Planet: planet})
 		if err != nil {
 			errs = append(errs, errors.WithIndex(err, i))
 		}

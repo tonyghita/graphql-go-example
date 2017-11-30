@@ -18,10 +18,12 @@ type VehicleResolver struct {
 }
 
 type NewVehicleArgs struct {
-	URL string
+	Vehicle swapi.Vehicle
+	URL     string
 }
 
 type NewVehiclesArgs struct {
+	Page swapi.VehiclePage
 	URLs []string
 }
 

@@ -43,7 +43,48 @@ func LoadStarship(ctx context.Context, url string) (swapi.Starship, error) {
 	return ship, nil
 }
 
-// LoadBatch ...
+func LoadStarships(ctx context.Context, urls []string) ([]swapi.Starship, error) {
+	l, err := Extract(ctx, StarshipsByURLs)
+	if err != nil {
+		return []swapi.Starship{}, err
+	}
+
+	data, loadErrors := l.LoadMany(ctx, urls)()
+
+	var (
+		ships = make([]swapi.Starship, 0, len(data))
+		errs  = make(errors.Errors, 0, len(loadErrors))
+	)
+
+	for i := range urls {
+		d, err := data[i], loadErrors[i]
+		if err != nil {
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
+		ship, ok := d.(swapi.Starship)
+		if !ok && err == nil {
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
+		ships = append(ships, ship)
+	}
+
+	return ships, errs.Err()
+}
+
+func PrimeStarships(ctx context.Context, page swapi.StarshipPage) error {
+	l, err := Extract(ctx, StarshipsByURLs)
+	if err != nil {
+		return err
+	}
+
+	for _, ship := range page.Starships {
+		l.Prime(ship.URL, ship)
+	}
+	return nil
+}
+
 func (loader StarshipLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)

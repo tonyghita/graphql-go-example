@@ -41,7 +41,7 @@ func NewSpecies(ctx context.Context, args NewSpeciesArgs) (*SpeciesResolver, err
 	case args.URL != "":
 		species, err = loader.LoadSpecies(ctx, args.URL)
 	default:
-		err = errors.New("unable to resolve")
+		err = errors.UnableToResolve
 	}
 
 	if err != nil {
