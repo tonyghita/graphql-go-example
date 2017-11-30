@@ -1,4 +1,3 @@
-// Package errors contains ...
 package errors
 
 import (
