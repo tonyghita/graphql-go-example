@@ -9,5 +9,5 @@ required = ["github.com/jteeuwen/go-bindata"]
   name = "github.com/nicksrandall/dataloader"
 
 [[constraint]]
-  branch = "master"
+  version = "v0.8.0"
   name = "github.com/pkg/errors"

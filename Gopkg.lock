@@ -26,10 +26,10 @@
   version = "v1.0.2"
 
 [[projects]]
-  branch = "master"
   name = "github.com/pkg/errors"
   packages = ["."]
-  revision = "f15c970de5b76fac0b59abb32d62c17cc7bed265"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "master"
@@ -40,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "198ff9f029eb6ec5e6f9afce693a74adb75310062aafc2b58ee122a2cfabc2f5"
+  inputs-digest = "e3324414fe01b64a61a61cea4fe77d331b961b12f432320905eb4dbb4d8ed4c0"
   solver-name = "gps-cdcl"
   solver-version = 1
