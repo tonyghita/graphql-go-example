@@ -4,19 +4,25 @@ import (
 	"context"
 	"sync"
 
+	"github.com/nicksrandall/dataloader"
+
 	"github.com/tonyghita/graphql-go-example/errors"
 	"github.com/tonyghita/graphql-go-example/swapi"
-
-	"github.com/nicksrandall/dataloader"
 )
 
-// SpeciesLoader ...
-type SpeciesLoader struct {
-	client *swapi.Client
+type SpeciesGetter interface {
+	Species(ctx context.Context, url string) (swapi.Species, error)
 }
 
-// LoadBatch ...
-func (l SpeciesLoader) LoadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+type SpeciesLoader struct {
+	get SpeciesGetter
+}
+
+func NewSpeciesLoader(client SpeciesGetter) dataloader.BatchFunc {
+	return SpeciesLoader{get: client}.loadBatch
+}
+
+func (loader SpeciesLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -27,7 +33,7 @@ func (l SpeciesLoader) LoadBatch(ctx context.Context, urls []string) []*dataload
 
 	for i, url := range urls {
 		go func(i int, url string) {
-			sp, err := l.client.Species(ctx, url)
+			sp, err := loader.get.Species(ctx, url)
 			results[i] = &dataloader.Result{Data: sp, Error: err}
 			wg.Done()
 		}(i, url)
@@ -38,53 +44,54 @@ func (l SpeciesLoader) LoadBatch(ctx context.Context, urls []string) []*dataload
 	return results
 }
 
-// LoadSpecies ...
 func LoadSpecies(ctx context.Context, url string) (swapi.Species, error) {
+	var species swapi.Species
 	l, err := Extract(ctx, SpeciesByURLs)
 	if err != nil {
-		return swapi.Species{}, err
+		return species, err
 	}
 
-	loadFn := l.Load(ctx, url)
-	data, err := loadFn()
+	data, err := l.Load(ctx, url)()
 	if err != nil {
-		return swapi.Species{}, err
+		return species, err
 	}
 
-	sp, ok := data.(swapi.Species)
+	species, ok := data.(swapi.Species)
 	if !ok {
-		return swapi.Species{}, errors.New("unexpected response")
+		return species, errors.UnexpectedResponse
 	}
 
-	return sp, nil
+	return species, nil
 }
 
-// LoadManySpecies ...
 func LoadManySpecies(ctx context.Context, urls ...string) ([]swapi.Species, error) {
 	l, err := Extract(ctx, SpeciesByURLs)
 	if err != nil {
 		return []swapi.Species{}, err
 	}
 
-	loadFn := l.LoadMany(ctx, urls)
-	data, loadErrors := loadFn()
+	data, loadErrors := l.LoadMany(ctx, urls)()
+	species := make([]swapi.Species, len(urls))
+	errs := make(errors.Errors, 0, len(loadErrors))
 
-	var species = make([]swapi.Species, len(urls))
-	var errs errors.Errors
-
-	// TODO: Construct a map of url -> data and range over URL data.
 	for i := range urls {
 		d, err := data[i], loadErrors[i]
 		if err != nil {
 			errs = append(errs, errors.WithIndex(err, i))
 		}
-		species = append(species, d.(swapi.Species))
+
+		sp, ok := d.(swapi.Species)
+		if !ok && err == nil {
+			// Ensure one error per element in the list.
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
+		species = append(species, sp)
 	}
 
-	return species, nil
+	return species, errs.Err()
 }
 
-// PrimeSpecies ...
 func PrimeSpecies(ctx context.Context, page swapi.SpeciesPage) error {
 	l, err := Extract(ctx, SpeciesByURLs)
 	if err != nil {

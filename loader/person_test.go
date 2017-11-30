@@ -1,3 +1,7 @@
 package loader_test
 
-// TODO: write unit tests and benchmarks...
+import "testing"
+
+func TestPersonLoader(t *testing.T) {
+	// TODO: write unit tests and benchmarks...
+}

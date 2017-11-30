@@ -10,9 +10,16 @@ import (
 	"github.com/nicksrandall/dataloader"
 )
 
-// StarshipLoader contains the client ...
+type StarshipGetter interface {
+	Starship(ctx context.Context, url string) (swapi.Starship, error)
+}
+
 type StarshipLoader struct {
-	client *swapi.Client
+	get StarshipGetter
+}
+
+func NewStarshipLoader(client StarshipGetter) dataloader.BatchFunc {
+	return StarshipLoader{get: client}.loadBatch
 }
 
 // LoadStarship ...
@@ -37,7 +44,7 @@ func LoadStarship(ctx context.Context, url string) (swapi.Starship, error) {
 }
 
 // LoadBatch ...
-func (l StarshipLoader) LoadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (loader StarshipLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -48,7 +55,7 @@ func (l StarshipLoader) LoadBatch(ctx context.Context, urls []string) []*dataloa
 
 	for i, url := range urls {
 		go func(ctx context.Context, url string, i int) {
-			data, err := l.client.Starship(ctx, url)
+			data, err := loader.get.Starship(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
 			wg.Done()
 		}(ctx, url, i)

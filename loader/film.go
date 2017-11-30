@@ -4,19 +4,26 @@ import (
 	"context"
 	"sync"
 
+	"github.com/nicksrandall/dataloader"
+
 	"github.com/tonyghita/graphql-go-example/errors"
 	"github.com/tonyghita/graphql-go-example/swapi"
-
-	"github.com/nicksrandall/dataloader"
 )
+
+type FilmGetter interface {
+	Film(ctx context.Context, url string) (swapi.Film, error)
+}
 
 // FilmLoader contains the client required to load film resources.
 type FilmLoader struct {
-	client *swapi.Client
+	get FilmGetter
 }
 
-// LoadBatch ...
-func (l FilmLoader) LoadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func NewFilmLoader(client FilmGetter) dataloader.BatchFunc {
+	return FilmLoader{get: client}.loadBatch
+}
+
+func (loader FilmLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -27,7 +34,7 @@ func (l FilmLoader) LoadBatch(ctx context.Context, urls []string) []*dataloader.
 
 	for i, url := range urls {
 		go func(i int, url string) {
-			resp, err := l.client.Film(ctx, url)
+			resp, err := loader.get.Film(ctx, url)
 			results[i] = &dataloader.Result{Data: resp, Error: err}
 			wg.Done()
 		}(i, url)
@@ -40,20 +47,22 @@ func (l FilmLoader) LoadBatch(ctx context.Context, urls []string) []*dataloader.
 
 // LoadFilm ...
 func LoadFilm(ctx context.Context, url string) (swapi.Film, error) {
+	var film swapi.Film
+
 	l, err := Extract(ctx, FilmsByURLs)
 	if err != nil {
-		return swapi.Film{}, err
+		return film, err
 	}
 
 	loadFn := l.Load(ctx, url)
 	data, err := loadFn()
 	if err != nil {
-		return swapi.Film{}, err
+		return film, err
 	}
 
 	film, ok := data.(swapi.Film)
 	if !ok {
-		return swapi.Film{}, errors.UnexpectedResponse
+		return film, errors.UnexpectedResponse
 	}
 
 	return film, nil
@@ -66,20 +75,30 @@ func LoadFilms(ctx context.Context, urls ...string) ([]swapi.Film, error) {
 		return []swapi.Film{}, err
 	}
 
-	loadFn := l.LoadMany(ctx, urls)
-	data, _ := loadFn() // TODO: Use these errors instead.
+	data, loadErrors := l.LoadMany(ctx, urls)()
 
-	var films = make([]swapi.Film, len(data))
-	var errs errors.Errors
+	var (
+		films = make([]swapi.Film, 0, len(data))
+		errs  = make(errors.Errors, 0, len(loadErrors))
+	)
 
-	// TODO: range over URLs instead of data.
-	for i, d := range data {
+	for i := range urls {
+		var (
+			d    = data[i]
+			err  = loadErrors[i]
+			film swapi.Film
+		)
+
+		if err != nil {
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
 		film, ok := d.(swapi.Film)
-		if !ok {
+		if !ok && err == nil {
 			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
 		}
 
-		films[i] = film
+		films = append(films, film)
 	}
 
 	return films, errs.Err()
