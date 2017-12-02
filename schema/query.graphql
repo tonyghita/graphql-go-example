@@ -1,15 +1,15 @@
 # The Query type represents all of the entry points into the API.
 type Query {
   # Search for a film by its title, or get all films when no parameters are provided.
-  films(title: String): [Film]!
+  films(title: String): [Film!]
   # Search for a person by their name, or get all characters when no parameters are provided.
-  people(name: String): [Person]!
+  people(name: String): [Person!]
   # Search for a planet by its name, or get all planets when no parameters are provided.
-  planets(name: String): [Planet]!
+  planets(name: String): [Planet!]
   # Search for a species by its name, or get all species when no parameters are provided.
-  species(name: String): [Species]!
+  species(name: String): [Species!]
   # Search for a starship by its name or model, or get all starships when no parameters are provided.
-  starships(nameOrModel: String): [Starship]!
+  starships(nameOrModel: String): [Starship!]
   # Search for a vehicle by its name or model, or get all vehicles when no parameters are provided.
-  vehicles(nameOrModel: String): [Vehicle]!
+  vehicles(nameOrModel: String): [Vehicle!]
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	graphql "github.com/neelance/graphql-go"
+
 	"github.com/tonyghita/graphql-go-example/handler"
 	"github.com/tonyghita/graphql-go-example/loader"
 	"github.com/tonyghita/graphql-go-example/resolver"
@@ -58,8 +59,8 @@ func main() {
 
 	// Begin listeing for requests.
 	log.Printf("Listening for requests on %s", s.Addr)
-	err := s.ListenAndServe()
-	if err != nil {
+
+	if err = s.ListenAndServe(); err != nil {
 		log.Println("server.ListenAndServe:", err)
 	}
 
