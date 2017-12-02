@@ -10,29 +10,29 @@ import (
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
-type PersonGetter interface {
+type personGetter interface {
 	Person(ctx context.Context, url string) (swapi.Person, error)
 }
 
 // PersonLoader contains the RPC client necessary to load people.
-type PersonLoader struct {
-	get PersonGetter
+type personLoader struct {
+	get personGetter
 }
 
-func NewPersonLoader(client PersonGetter) dataloader.BatchFunc {
-	return PersonLoader{get: client}.loadBatch
+func newPersonLoader(client personGetter) dataloader.BatchFunc {
+	return personLoader{get: client}.loadBatch
 }
 
 // LoadPerson loads a person resource from the SWAPI API URL.
 func LoadPerson(ctx context.Context, url string) (swapi.Person, error) {
 	var person swapi.Person
 
-	l, err := Extract(ctx, PeopleByURLs)
+	ldr, err := extract(ctx, personLoaderKey)
 	if err != nil {
 		return person, err
 	}
 
-	data, err := l.Load(ctx, url)()
+	data, err := ldr.Load(ctx, url)()
 	if err != nil {
 		return person, err
 	}
@@ -46,20 +46,20 @@ func LoadPerson(ctx context.Context, url string) (swapi.Person, error) {
 }
 
 func LoadPeople(ctx context.Context, urls []string) ([]swapi.Person, error) {
-	l, err := Extract(ctx, PeopleByURLs)
+	ldr, err := extract(ctx, personLoaderKey)
 	if err != nil {
 		return []swapi.Person{}, err
 	}
 
-	data, loadErrors := l.LoadMany(ctx, urls)()
+	data, loadErrs := ldr.LoadMany(ctx, urls)()
 
 	var (
 		people = make([]swapi.Person, 0, len(data))
-		errs   = make(errors.Errors, 0, len(loadErrors))
+		errs   = make(errors.Errors, 0, len(loadErrs))
 	)
 
 	for i := range urls {
-		d, err := data[i], loadErrors[i]
+		d, err := data[i], loadErrs[i]
 		if err != nil {
 			errs = append(errs, errors.WithIndex(err, i))
 		}
@@ -76,18 +76,19 @@ func LoadPeople(ctx context.Context, urls []string) ([]swapi.Person, error) {
 }
 
 func PrimePeople(ctx context.Context, page swapi.PersonPage) error {
-	l, err := Extract(ctx, PeopleByURLs)
+	ldr, err := extract(ctx, personLoaderKey)
 	if err != nil {
 		return err
 	}
 
-	for _, person := range page.People {
-		l.Prime(person.URL, person)
+	for _, p := range page.People {
+		ldr.Prime(p.URL, p)
 	}
+
 	return nil
 }
 
-func (l PersonLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (ldr personLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -98,7 +99,7 @@ func (l PersonLoader) loadBatch(ctx context.Context, urls []string) []*dataloade
 
 	for i, url := range urls {
 		go func(ctx context.Context, url string, i int) {
-			data, err := l.get.Person(ctx, url)
+			data, err := ldr.get.Person(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
 			wg.Done()
 		}(ctx, url, i)

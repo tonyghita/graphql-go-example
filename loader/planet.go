@@ -10,27 +10,27 @@ import (
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
-type PlanetGetter interface {
+type planetGetter interface {
 	Planet(ctx context.Context, url string) (swapi.Planet, error)
 }
 
-type PlanetLoader struct {
-	get PlanetGetter
+type planetLoader struct {
+	get planetGetter
 }
 
-func NewPlanetLoader(client PlanetGetter) dataloader.BatchFunc {
-	return PlanetLoader{get: client}.loadBatch
+func newPlanetLoader(client planetGetter) dataloader.BatchFunc {
+	return planetLoader{get: client}.loadBatch
 }
 
 func LoadPlanet(ctx context.Context, url string) (swapi.Planet, error) {
 	var planet swapi.Planet
 
-	l, err := Extract(ctx, PlanetsByURLs)
+	ldr, err := extract(ctx, planetLoaderKey)
 	if err != nil {
 		return planet, err
 	}
 
-	data, err := l.Load(ctx, url)()
+	data, err := ldr.Load(ctx, url)()
 	if err != nil {
 		return planet, err
 	}
@@ -44,23 +44,48 @@ func LoadPlanet(ctx context.Context, url string) (swapi.Planet, error) {
 }
 
 func LoadPlanets(ctx context.Context, urls []string) ([]swapi.Planet, error) {
-	// TODO: implement
-	return []swapi.Planet{}, nil
+	ldr, err := extract(ctx, planetLoaderKey)
+	if err != nil {
+		return []swapi.Planet{}, err
+	}
+
+	data, loadErrs := ldr.LoadMany(ctx, urls)()
+
+	var (
+		planets = make([]swapi.Planet, 0, len(data))
+		errs    = make(errors.Errors, 0, len(loadErrs))
+	)
+
+	for i := range urls {
+		d, err := data[i], loadErrs[i]
+		if err != nil {
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
+		planet, ok := d.(swapi.Planet)
+		if !ok && err == nil {
+			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
+		}
+
+		planets = append(planets, planet)
+	}
+
+	return planets, errs.Err()
 }
 
 func PrimePlanets(ctx context.Context, page swapi.PlanetPage) error {
-	l, err := Extract(ctx, PlanetsByURLs)
+	ldr, err := extract(ctx, planetLoaderKey)
 	if err != nil {
 		return err
 	}
 
-	for _, planet := range page.Planets {
-		l.Prime(planet.URL, planet)
+	for _, p := range page.Planets {
+		ldr.Prime(p.URL, p)
 	}
 	return nil
 }
 
-func (loader PlanetLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (ldr planetLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -71,7 +96,7 @@ func (loader PlanetLoader) loadBatch(ctx context.Context, urls []string) []*data
 
 	for i, url := range urls {
 		go func(ctx context.Context, i int, url string) {
-			data, err := loader.get.Planet(ctx, url)
+			data, err := ldr.get.Planet(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
 			wg.Done()
 		}(ctx, i, url)

@@ -3,12 +3,21 @@ package resolver
 import (
 	"context"
 
+	"github.com/tonyghita/graphql-go-example/errors"
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
 // The QueryResolver is the entry point for all top-level read operations.
 type QueryResolver struct {
-	Client *swapi.Client
+	client *swapi.Client
+}
+
+func NewRoot(client *swapi.Client) (*QueryResolver, error) {
+	if client == nil {
+		return nil, errors.UnableToResolve
+	}
+
+	return &QueryResolver{client: client}, nil
 }
 
 // FilmsQueryArgs are the arguments for the "films" query.
@@ -24,7 +33,7 @@ func (r QueryResolver) Films(ctx context.Context, args FilmsQueryArgs) ([]*FilmR
 		title = *args.Title
 	}
 
-	page, err := r.Client.SearchFilms(ctx, title)
+	page, err := r.client.SearchFilms(ctx, title)
 	if err != nil {
 		return []*FilmResolver{}, err
 	}
@@ -45,7 +54,7 @@ func (r QueryResolver) People(ctx context.Context, args PeopleQueryArgs) ([]*Per
 		name = *args.Name
 	}
 
-	page, err := r.Client.SearchPerson(ctx, name)
+	page, err := r.client.SearchPerson(ctx, name)
 	if err != nil {
 		return []*PersonResolver{}, err
 	}
@@ -66,7 +75,7 @@ func (r QueryResolver) Planets(ctx context.Context, args PlanetsQueryArgs) ([]*P
 		name = *args.Name
 	}
 
-	page, err := r.Client.SearchPlanets(ctx, name)
+	page, err := r.client.SearchPlanets(ctx, name)
 	if err != nil {
 		return []*PlanetResolver{}, err
 	}
@@ -87,7 +96,7 @@ func (r QueryResolver) Species(ctx context.Context, args SpeciesQueryArgs) ([]*S
 		name = *args.Name
 	}
 
-	page, err := r.Client.SearchSpecies(ctx, name)
+	page, err := r.client.SearchSpecies(ctx, name)
 	if err != nil {
 		return []*SpeciesResolver{}, err
 	}
@@ -106,7 +115,7 @@ func (r QueryResolver) Starships(ctx context.Context, args StarshipsQueryArgs) (
 		name = *args.Name
 	}
 
-	page, err := r.Client.SearchStarships(ctx, name)
+	page, err := r.client.SearchStarships(ctx, name)
 	if err != nil {
 		return []*StarshipResolver{}, err
 	}
@@ -125,7 +134,7 @@ func (r QueryResolver) Vehicles(ctx context.Context, args VehiclesQueryArgs) ([]
 		name = *args.Name
 	}
 
-	page, err := r.Client.SearchVehicles(ctx, name)
+	page, err := r.client.SearchVehicles(ctx, name)
 	if err != nil {
 		return []*VehicleResolver{}, nil
 	}

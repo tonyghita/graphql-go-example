@@ -8,19 +8,19 @@ import (
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
-type VehicleGetter interface {
+type vehicleGetter interface {
 	Vehicle(ctx context.Context, url string) (swapi.Vehicle, error)
 }
 
 type VehicleLoader struct {
-	get VehicleGetter
+	get vehicleGetter
 }
 
-func NewVehicleLoader(client VehicleGetter) dataloader.BatchFunc {
+func newVehicleLoader(client vehicleGetter) dataloader.BatchFunc {
 	return VehicleLoader{get: client}.loadBatch
 }
 
-func (loader VehicleLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (ldr VehicleLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -31,7 +31,7 @@ func (loader VehicleLoader) loadBatch(ctx context.Context, urls []string) []*dat
 
 	for i, url := range urls {
 		go func(ctx context.Context, i int, url string) {
-			data, err := loader.get.Vehicle(ctx, url)
+			data, err := ldr.get.Vehicle(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
 			wg.Done()
 		}(ctx, i, url)

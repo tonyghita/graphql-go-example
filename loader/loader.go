@@ -5,61 +5,75 @@ import (
 	"fmt"
 
 	"github.com/nicksrandall/dataloader"
-
-	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
 // TODO: describe why this type has been aliased to an unexported type.
-type key int
+type key string
 
 const (
-	FilmsByURLs key = iota
-	PeopleByURLs
-	PlanetsByURLs
-	SpeciesByURLs
-	StarshipsByURLs
-	VehiclesByURLs
+	filmLoaderKey     key = "film"
+	personLoaderKey   key = "person"
+	planetLoaderKey   key = "planet"
+	speciesLoaderKey  key = "species"
+	starshipLoaderKey key = "starship"
+	vehicleLoaderKey  key = "vehicle"
 )
 
-var keysToStr = map[key]string{
-	FilmsByURLs:     "FilmsByURLs",
-	PeopleByURLs:    "PeopleByURLs",
-	PlanetsByURLs:   "PlanetsByURLs",
-	SpeciesByURLs:   "SpeciesByURLs",
-	StarshipsByURLs: "StarshipsByURLs",
-	VehiclesByURLs:  "VehiclesByURLs",
+type Client interface {
+	filmGetter
+	personGetter
+	planetGetter
+	speciesGetter
+	starshipGetter
+	vehicleGetter
 }
 
-func Initialize(ctx context.Context, client *swapi.Client) context.Context {
-	m := map[key]dataloader.BatchFunc{
-		FilmsByURLs:     NewFilmLoader(client),
-		PeopleByURLs:    NewPersonLoader(client),
-		PlanetsByURLs:   NewPlanetLoader(client),
-		SpeciesByURLs:   NewSpeciesLoader(client),
-		StarshipsByURLs: NewStarshipLoader(client),
-		VehiclesByURLs:  NewVehicleLoader(client),
+// Initialize a lookup map of context keys to batch functions.
+//
+// When Attach is called on the Collection, the batch functions are used to create new dataloader
+// instances. The instances are attached to the request context at the provided keys.
+//
+// The keys are then used to extract the dataloader instances from the request context.
+func Initialize(client Client) Collection {
+	return Collection{
+		lookup: map[key]dataloader.BatchFunc{
+			filmLoaderKey:     newFilmLoader(client),
+			personLoaderKey:   newPersonLoader(client),
+			planetLoaderKey:   newPlanetLoader(client),
+			speciesLoaderKey:  newSpeciesLoader(client),
+			starshipLoaderKey: newStarshipLoader(client),
+			vehicleLoaderKey:  newVehicleLoader(client),
+		},
 	}
+}
 
-	for k, batchFunc := range m {
-		ctx = context.WithValue(ctx, k, dataloader.NewBatchedLoader(batchFunc))
+// Collection holds an internal lookup of initialized batch data load functions.
+type Collection struct {
+	lookup map[key]dataloader.BatchFunc
+}
+
+// Attach creates new instances of dataloader.Loader and attaches the instances on the request context.
+// We do this because the dataloader has an in-memory cache that is scoped to the request.
+func (c Collection) Attach(ctx context.Context) context.Context {
+	for k, batchFn := range c.lookup {
+		ctx = context.WithValue(ctx, k, dataloader.NewBatchedLoader(batchFn))
 	}
 
 	return ctx
 }
 
-func Extract(ctx context.Context, k key) (*dataloader.Loader, error) {
-	l, ok := ctx.Value(k).(*dataloader.Loader)
+// extract is a helper function to make common get-value, assert-type, return-error-or-value
+// operations easier.
+func extract(ctx context.Context, k key) (*dataloader.Loader, error) {
+	ldr, ok := ctx.Value(k).(*dataloader.Loader)
 	if !ok {
-		return nil, fmt.Errorf("unable to find %q loader on the request context", k)
+		return nil, fmt.Errorf("unable to find %s loader on the request context", k)
 	}
 
-	return l, nil
+	return ldr, nil
 }
 
+// Implements Stringer.
 func (k key) String() string {
-	s, ok := keysToStr[k]
-	if !ok {
-		return "unknown"
-	}
-	return s
+	return string(k)
 }

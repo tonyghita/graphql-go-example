@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/tonyghita/graphql-go-example/loader"
-
 	graphql "github.com/neelance/graphql-go"
+
+	"github.com/tonyghita/graphql-go-example/loader"
 )
 
 // Logger defines an interface with a single method.
@@ -36,8 +36,9 @@ type Query struct {
 
 // The GraphQL handler handles GraphQL API requests over HTTP.
 type GraphQL struct {
-	Schema *graphql.Schema
-	Logger Logger
+	Schema  *graphql.Schema
+	Loaders loader.Collection
+	Logger  Logger
 }
 
 func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -63,7 +64,7 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Execute the request.
 	var (
-		ctx       = loader.Initialize(r.Context()) // TODO: inject client dependencies.
+		ctx       = h.Loaders.Attach(r.Context())
 		responses = make([]*graphql.Response, n)
 		wg        sync.WaitGroup
 	)

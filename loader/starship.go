@@ -10,27 +10,26 @@ import (
 	"github.com/nicksrandall/dataloader"
 )
 
-type StarshipGetter interface {
+type starshipGetter interface {
 	Starship(ctx context.Context, url string) (swapi.Starship, error)
 }
 
 type StarshipLoader struct {
-	get StarshipGetter
+	get starshipGetter
 }
 
-func NewStarshipLoader(client StarshipGetter) dataloader.BatchFunc {
+func newStarshipLoader(client starshipGetter) dataloader.BatchFunc {
 	return StarshipLoader{get: client}.loadBatch
 }
 
 // LoadStarship ...
 func LoadStarship(ctx context.Context, url string) (swapi.Starship, error) {
-	l, err := Extract(ctx, StarshipsByURLs)
+	ldr, err := extract(ctx, starshipLoaderKey)
 	if err != nil {
 		return swapi.Starship{}, err
 	}
 
-	loadFn := l.Load(ctx, url)
-	data, err := loadFn()
+	data, err := ldr.Load(ctx, url)()
 	if err != nil {
 		return swapi.Starship{}, err
 	}
@@ -44,27 +43,27 @@ func LoadStarship(ctx context.Context, url string) (swapi.Starship, error) {
 }
 
 func LoadStarships(ctx context.Context, urls []string) ([]swapi.Starship, error) {
-	l, err := Extract(ctx, StarshipsByURLs)
+	ldr, err := extract(ctx, starshipLoaderKey)
 	if err != nil {
 		return []swapi.Starship{}, err
 	}
 
-	data, loadErrors := l.LoadMany(ctx, urls)()
+	data, loadErrs := ldr.LoadMany(ctx, urls)()
 
 	var (
 		ships = make([]swapi.Starship, 0, len(data))
-		errs  = make(errors.Errors, 0, len(loadErrors))
+		errs  = make(errors.Errors, 0, len(loadErrs))
 	)
 
 	for i := range urls {
-		d, err := data[i], loadErrors[i]
+		d, err := data[i], loadErrs[i]
 		if err != nil {
 			errs = append(errs, errors.WithIndex(err, i))
 		}
 
 		ship, ok := d.(swapi.Starship)
 		if !ok && err == nil {
-			errs = append(errs, errors.WithIndex(err, i))
+			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
 		}
 
 		ships = append(ships, ship)
@@ -74,18 +73,19 @@ func LoadStarships(ctx context.Context, urls []string) ([]swapi.Starship, error)
 }
 
 func PrimeStarships(ctx context.Context, page swapi.StarshipPage) error {
-	l, err := Extract(ctx, StarshipsByURLs)
+	ldr, err := extract(ctx, starshipLoaderKey)
 	if err != nil {
 		return err
 	}
 
-	for _, ship := range page.Starships {
-		l.Prime(ship.URL, ship)
+	for _, s := range page.Starships {
+		ldr.Prime(s.URL, s)
 	}
+
 	return nil
 }
 
-func (loader StarshipLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (ldr StarshipLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -96,7 +96,7 @@ func (loader StarshipLoader) loadBatch(ctx context.Context, urls []string) []*da
 
 	for i, url := range urls {
 		go func(ctx context.Context, url string, i int) {
-			data, err := loader.get.Starship(ctx, url)
+			data, err := ldr.get.Starship(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
 			wg.Done()
 		}(ctx, url, i)
