@@ -8,12 +8,8 @@ type Query {
   planets(name: String): [Planet]!
   # Search for a species by its name, or get all species when no parameters are provided.
   species(name: String): [Species]!
-  # Search for a starship by its name or model,  or get all starships when no parameters are provided.
-  starships(name: String, model: String): [Starship]!
+  # Search for a starship by its name or model, or get all starships when no parameters are provided.
+  starships(nameOrModel: String): [Starship]!
   # Search for a vehicle by its name or model, or get all vehicles when no parameters are provided.
-  vehicles(name: String, model: String): [Vehicle]!
-}
-
-schema {
-  query: Query
+  vehicles(nameOrModel: String): [Vehicle]!
 }

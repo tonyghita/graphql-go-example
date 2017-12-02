@@ -30,8 +30,12 @@ func extractID(url string) graphql.ID {
 	return graphql.ID(id)
 }
 
-func nilOrEmpty(s *string) bool {
-	return s == nil || *s == ""
+func strValue(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+
+	return *ptr
 }
 
 func nullableStr(s string) *string {
