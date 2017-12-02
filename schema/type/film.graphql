@@ -13,15 +13,15 @@ type Film {
   # The RFC3339 date format of the film release in the orginal creator country.
   releaseDate: Time!
   # A list of species that are in this film.
-  species: [Species]!
+  species: [Species!]
   # A list of starships that are in this film.
-  starships: [Starship]!
+  starships: [Starship!]
   # A list of vehicles that are in this film.
-  vehicles: [Vehicle]!
+  vehicles: [Vehicle!]
   # A list of characters that are in this film.
-  characters: [Person]!
+  characters: [Person!]
   # A list of planets that are in this film.
-  planets: [Planet]!
+  planets: [Planet!]
   # The RFC3339 date format of the time that this resource was created.
   createdAt: Time!
   # The RFC3339 date format of the time that this resource was edited.

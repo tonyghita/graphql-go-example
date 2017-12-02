@@ -26,9 +26,9 @@ type Species {
   # The planet this species originates from.
   homeworld: Planet
   # A list of characters that are a part of this species.
-  characters: [Person]!
+  characters: [Person!]
   # A list of films that this species has appeared in.
-  films: [Film]!
+  films: [Film!]
   # The RFC3339 date format of the time this resource was created.
   createdAt: Time!
   # The RFC3339 date format of the time this resource was edited.

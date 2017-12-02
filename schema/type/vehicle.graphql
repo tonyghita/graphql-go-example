@@ -26,9 +26,9 @@ type Vehicle {
   # having to resupply.
   consumablesDuration: String!
   # A list of films that this vehicle has appeared in.
-  films: [Film]!
+  films: [Film!]
   # A list of people that have piloted this vehicle.
-  pilots: [Person]!
+  pilots: [Person!]
   # The RFC3339 date format of the time that this resource was created.
   createdAt: Time!
   # The RFC3339 date format of the time that this resource was edited.

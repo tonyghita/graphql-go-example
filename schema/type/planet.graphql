@@ -21,9 +21,9 @@ type Planet {
   # The percentage 0.0-100.0 of the planet surface that is naturally occurring water or bodies of water.
   surfaceWaterPercentage: Float!
   # A list of notable people who live on this planet.
-  residents: [Person]!
+  residents: [Person!]
   # A list of films this planet has appeared in.
-  films: [Film]!
+  films: [Film!]
   # The RFC3339 date format of the time that this resource was created.
   createdAt: Time!
   # The RFC3339 date format of the time that this resource was edited.

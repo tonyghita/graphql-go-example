@@ -27,11 +27,11 @@ type Person {
   # The planet this person was born on or inhabits.
   homeworld: Planet
   # A list of the films this person has been in.
-  films: [Film]!
+  films: [Film!]
   # A list of species this person belongs to.
-  species: [Species]!
+  species: [Species!]
   # A list of vehicles this person has piloted.
-  vehicles: [Vehicle]!
+  vehicles: [Vehicle!]
   # The RFC3339 date format of the time this resource was created.
   createdAt: Time!
   # The RFC3339 date format of the time this resource was edited.
