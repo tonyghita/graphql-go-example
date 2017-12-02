@@ -7,7 +7,8 @@ import (
 	"github.com/nicksrandall/dataloader"
 )
 
-// TODO: describe why this type has been aliased to an unexported type.
+// The key type is created so that these values do not collide with other keys that some other
+// package may have placed on the context.
 //
 // For more explanation of this pattern, see:
 // https://medium.com/@matryer/context-keys-in-go-5312346a868d
