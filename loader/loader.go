@@ -8,6 +8,9 @@ import (
 )
 
 // TODO: describe why this type has been aliased to an unexported type.
+//
+// For more explanation of this pattern, see:
+// https://medium.com/@matryer/context-keys-in-go-5312346a868d
 type key string
 
 const (
