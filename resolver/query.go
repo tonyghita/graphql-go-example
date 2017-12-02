@@ -27,10 +27,10 @@ type FilmsQueryArgs struct {
 }
 
 // Films resolves a list of films. If no arguments are provided, all films are fetched.
-func (r QueryResolver) Films(ctx context.Context, args FilmsQueryArgs) ([]*FilmResolver, error) {
+func (r QueryResolver) Films(ctx context.Context, args FilmsQueryArgs) (*[]*FilmResolver, error) {
 	page, err := r.client.SearchFilms(ctx, strValue(args.Title))
 	if err != nil {
-		return []*FilmResolver{}, err
+		return nil, err
 	}
 
 	return NewFilms(ctx, NewFilmsArgs{Page: page})
@@ -43,10 +43,10 @@ type PeopleQueryArgs struct {
 }
 
 // People resolves a list of people. If no arguments are provided, all people are fetched.
-func (r QueryResolver) People(ctx context.Context, args PeopleQueryArgs) ([]*PersonResolver, error) {
+func (r QueryResolver) People(ctx context.Context, args PeopleQueryArgs) (*[]*PersonResolver, error) {
 	page, err := r.client.SearchPerson(ctx, strValue(args.Name))
 	if err != nil {
-		return []*PersonResolver{}, err
+		return nil, err
 	}
 
 	return NewPeople(ctx, NewPeopleArgs{Page: page})
@@ -59,10 +59,10 @@ type PlanetsQueryArgs struct {
 }
 
 // Planets resolves a list of planets. If no arguments are provided, all planets are fetched.
-func (r QueryResolver) Planets(ctx context.Context, args PlanetsQueryArgs) ([]*PlanetResolver, error) {
+func (r QueryResolver) Planets(ctx context.Context, args PlanetsQueryArgs) (*[]*PlanetResolver, error) {
 	page, err := r.client.SearchPlanets(ctx, strValue(args.Name))
 	if err != nil {
-		return []*PlanetResolver{}, err
+		return nil, err
 	}
 
 	return NewPlanets(ctx, NewPlanetsArgs{Page: page})
@@ -75,10 +75,10 @@ type SpeciesQueryArgs struct {
 }
 
 // Species resolves a list of species. If no arguments are provided, all species are fetched.
-func (r QueryResolver) Species(ctx context.Context, args SpeciesQueryArgs) ([]*SpeciesResolver, error) {
+func (r QueryResolver) Species(ctx context.Context, args SpeciesQueryArgs) (*[]*SpeciesResolver, error) {
 	page, err := r.client.SearchSpecies(ctx, strValue(args.Name))
 	if err != nil {
-		return []*SpeciesResolver{}, err
+		return nil, err
 	}
 
 	return NewSpeciesList(ctx, NewSpeciesListArgs{Page: page})
@@ -88,10 +88,10 @@ type StarshipsQueryArgs struct {
 	NameOrModel *string
 }
 
-func (r QueryResolver) Starships(ctx context.Context, args StarshipsQueryArgs) ([]*StarshipResolver, error) {
+func (r QueryResolver) Starships(ctx context.Context, args StarshipsQueryArgs) (*[]*StarshipResolver, error) {
 	page, err := r.client.SearchStarships(ctx, strValue(args.NameOrModel))
 	if err != nil {
-		return []*StarshipResolver{}, err
+		return nil, err
 	}
 
 	return NewStarships(ctx, NewStarshipsArgs{Page: page})
@@ -101,10 +101,10 @@ type VehiclesQueryArgs struct {
 	NameOrModel *string
 }
 
-func (r QueryResolver) Vehicles(ctx context.Context, args VehiclesQueryArgs) ([]*VehicleResolver, error) {
+func (r QueryResolver) Vehicles(ctx context.Context, args VehiclesQueryArgs) (*[]*VehicleResolver, error) {
 	page, err := r.client.SearchVehicles(ctx, strValue(args.NameOrModel))
 	if err != nil {
-		return []*VehicleResolver{}, nil
+		return nil, err
 	}
 
 	return NewVehicles(ctx, NewVehiclesArgs{Page: page})

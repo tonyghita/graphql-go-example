@@ -48,13 +48,16 @@ func NewPlanet(ctx context.Context, args NewPlanetArgs) (*PlanetResolver, error)
 	return &PlanetResolver{planet: planet}, nil
 }
 
-func NewPlanets(ctx context.Context, args NewPlanetsArgs) ([]*PlanetResolver, error) {
+func NewPlanets(ctx context.Context, args NewPlanetsArgs) (*[]*PlanetResolver, error) {
 	loader.PrimePlanets(ctx, args.Page)
 
 	planets, err := loader.LoadPlanets(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
+		switch err.(type) {
 		// TODO: Improve error handling.
-		return []*PlanetResolver{}, err
+		default:
+			return nil, err
+		}
 	}
 
 	var resolvers = make([]*PlanetResolver, len(args.URLs))
@@ -68,7 +71,7 @@ func NewPlanets(ctx context.Context, args NewPlanetsArgs) ([]*PlanetResolver, er
 		resolvers = append(resolvers, r)
 	}
 
-	return resolvers, errs.Err()
+	return &resolvers, errs.Err()
 }
 
 // ID resolves ..
@@ -127,12 +130,12 @@ func (r *PlanetResolver) SurfaceWaterPercentage() (float64, error) {
 }
 
 // Residents resolves ...
-func (r *PlanetResolver) Residents(ctx context.Context) ([]*PersonResolver, error) {
+func (r *PlanetResolver) Residents(ctx context.Context) (*[]*PersonResolver, error) {
 	return NewPeople(ctx, NewPeopleArgs{URLs: r.planet.ResidentURLs})
 }
 
 // Films resolves ...
-func (r *PlanetResolver) Films(ctx context.Context) ([]*FilmResolver, error) {
+func (r *PlanetResolver) Films(ctx context.Context) (*[]*FilmResolver, error) {
 	return NewFilms(ctx, NewFilmsArgs{URLs: r.planet.FilmURLs})
 }
 

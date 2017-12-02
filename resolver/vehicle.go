@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tonyghita/graphql-go-example/errors"
-	"github.com/tonyghita/graphql-go-example/swapi"
-
 	graphql "github.com/neelance/graphql-go"
+
+	"github.com/tonyghita/graphql-go-example/errors"
+	"github.com/tonyghita/graphql-go-example/loader"
+	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
 // The VehicleResolver resolves the vehicle type.
@@ -28,13 +29,50 @@ type NewVehiclesArgs struct {
 }
 
 func NewVehicle(ctx context.Context, args NewVehicleArgs) (*VehicleResolver, error) {
-	// TODO: implement.
-	return nil, nil
+	var vehicle swapi.Vehicle
+	var err error
+
+	switch {
+	case args.Vehicle.URL != "":
+		vehicle = args.Vehicle
+	case args.URL != "":
+		vehicle, err = loader.LoadVehicle(ctx, args.URL)
+	default:
+		err = errors.UnableToResolve
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &VehicleResolver{vehicle: vehicle}, nil
 }
 
-func NewVehicles(ctx context.Context, args NewVehiclesArgs) ([]*VehicleResolver, error) {
-	// TODO: implement.
-	return []*VehicleResolver{}, nil
+func NewVehicles(ctx context.Context, args NewVehiclesArgs) (*[]*VehicleResolver, error) {
+	var errs errors.Errors
+
+	loader.PrimeVehicles(ctx, args.Page)
+
+	vehicles, err := loader.LoadVehicles(ctx, append(args.URLs, args.Page.URLs()...))
+	if err != nil {
+		switch err.(type) {
+		// TODO: expand multi-error.
+		default:
+			return nil, err
+		}
+	}
+
+	var resolvers = make([]*VehicleResolver, 0, len(vehicles))
+
+	for i, v := range vehicles {
+		r, err := NewVehicle(ctx, NewVehicleArgs{Vehicle: v})
+		if err != nil {
+			errs = append(errs, errors.WithIndex(err, i))
+		}
+
+		resolvers = append(resolvers, r)
+	}
+
+	return &resolvers, errs.Err()
 }
 
 // ID resolves ...
@@ -133,12 +171,12 @@ func (r *VehicleResolver) ConsumablesDuration() string {
 }
 
 // Films resolves ...
-func (r *VehicleResolver) Films(ctx context.Context) ([]*FilmResolver, error) {
+func (r *VehicleResolver) Films(ctx context.Context) (*[]*FilmResolver, error) {
 	return NewFilms(ctx, NewFilmsArgs{URLs: r.vehicle.FilmURLs})
 }
 
 // Pilots resolves ...
-func (r *VehicleResolver) Pilots(ctx context.Context) ([]*PersonResolver, error) {
+func (r *VehicleResolver) Pilots(ctx context.Context) (*[]*PersonResolver, error) {
 	return NewPeople(ctx, NewPeopleArgs{URLs: r.vehicle.PilotURLs})
 }
 

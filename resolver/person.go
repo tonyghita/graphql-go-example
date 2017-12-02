@@ -47,18 +47,21 @@ func NewPerson(ctx context.Context, args NewPersonArgs) (*PersonResolver, error)
 	return &PersonResolver{person: person}, nil
 }
 
-func NewPeople(ctx context.Context, args NewPeopleArgs) ([]*PersonResolver, error) {
+func NewPeople(ctx context.Context, args NewPeopleArgs) (*[]*PersonResolver, error) {
 	loader.PrimePeople(ctx, args.Page)
 
 	people, err := loader.LoadPeople(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
+		switch err.(type) {
 		// TODO: this error handling will have to be a bit more sophisticated.
 		// When all URLs provided fail to load people, return a consolidated error.
 		// Otherwise, filter out errored results.
-		return []*PersonResolver{}, err
+		default:
+			return nil, err
+		}
 	}
 
-	var resolvers = make([]*PersonResolver, len(people))
+	var resolvers = make([]*PersonResolver, 0, len(people))
 	var errs errors.Errors
 
 	for i, person := range people {
@@ -69,7 +72,7 @@ func NewPeople(ctx context.Context, args NewPeopleArgs) ([]*PersonResolver, erro
 		resolvers = append(resolvers, r)
 	}
 
-	return resolvers, errs.Err()
+	return &resolvers, errs.Err()
 }
 
 // ID resolves ...
@@ -143,17 +146,17 @@ func (r *PersonResolver) Homeworld(ctx context.Context) (*PlanetResolver, error)
 }
 
 // Films resolves ...
-func (r *PersonResolver) Films(ctx context.Context) ([]*FilmResolver, error) {
+func (r *PersonResolver) Films(ctx context.Context) (*[]*FilmResolver, error) {
 	return NewFilms(ctx, NewFilmsArgs{URLs: r.person.FilmURLs})
 }
 
 // Species resolves ...
-func (r *PersonResolver) Species(ctx context.Context) ([]*SpeciesResolver, error) {
+func (r *PersonResolver) Species(ctx context.Context) (*[]*SpeciesResolver, error) {
 	return nil, nil
 }
 
 // Vehicles resolves ...
-func (r *PersonResolver) Vehicles(ctx context.Context) ([]*VehicleResolver, error) {
+func (r *PersonResolver) Vehicles(ctx context.Context) (*[]*VehicleResolver, error) {
 	return NewVehicles(ctx, NewVehiclesArgs{URLs: r.person.VehicleURLs})
 }
 

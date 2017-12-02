@@ -29,6 +29,14 @@ type VehiclePage struct {
 	Vehicles []Vehicle `json:"results"`
 }
 
+func (p VehiclePage) URLs() []string {
+	urls := make([]string, 0, len(p.Vehicles))
+	for _, v := range p.Vehicles {
+		urls = append(urls, v.URL)
+	}
+	return urls
+}
+
 func (c *Client) Vehicle(ctx context.Context, url string) (Vehicle, error) {
 	r, err := c.NewRequest(ctx, url)
 	if err != nil {

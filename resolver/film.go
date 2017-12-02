@@ -17,19 +17,16 @@ type FilmResolver struct {
 	film swapi.Film
 }
 
-// NewFilmsArgs ...
 type NewFilmsArgs struct {
 	Page swapi.FilmPage
 	URLs []string
 }
 
-// NewFilmArgs ...
 type NewFilmArgs struct {
 	Film swapi.Film
 	URL  string
 }
 
-// NewFilm ...
 func NewFilm(ctx context.Context, args NewFilmArgs) (*FilmResolver, error) {
 	var film swapi.Film
 	var err error
@@ -50,18 +47,20 @@ func NewFilm(ctx context.Context, args NewFilmArgs) (*FilmResolver, error) {
 	return &FilmResolver{film: film}, nil
 }
 
-// NewFilms ...
-func NewFilms(ctx context.Context, args NewFilmsArgs) ([]*FilmResolver, error) {
+func NewFilms(ctx context.Context, args NewFilmsArgs) (*[]*FilmResolver, error) {
+	var errs errors.Errors
+
 	loader.PrimeFilms(ctx, args.Page)
 
 	films, err := loader.LoadFilms(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
-		// TODO: Improve error handling logic here.
-		return []*FilmResolver{}, err
+		switch err.(type) {
+		default:
+			return nil, err
+		}
 	}
 
 	var resolvers = make([]*FilmResolver, len(films))
-	var errs errors.Errors
 
 	for i, film := range films {
 		resolver, err := NewFilm(ctx, NewFilmArgs{Film: film})
@@ -72,7 +71,7 @@ func NewFilms(ctx context.Context, args NewFilmsArgs) ([]*FilmResolver, error) {
 		resolvers = append(resolvers, resolver)
 	}
 
-	return resolvers, errs.Err()
+	return &resolvers, errs.Err()
 }
 
 // ID resolves the film's unique identifier.
@@ -107,28 +106,28 @@ func (r *FilmResolver) ReleaseDate() (graphql.Time, error) {
 }
 
 // Species resolves a list of the species that are in this film.
-func (r *FilmResolver) Species(ctx context.Context) ([]*SpeciesResolver, error) {
-	return []*SpeciesResolver{}, nil
+func (r *FilmResolver) Species(ctx context.Context) (*[]*SpeciesResolver, error) {
+	return NewSpeciesList(ctx, NewSpeciesListArgs{URLs: r.film.SpeciesURLs})
 }
 
 // Starships resolves a list of starships that are in this film.
-func (r *FilmResolver) Starships(ctx context.Context) ([]*StarshipResolver, error) {
-	return []*StarshipResolver{}, nil
+func (r *FilmResolver) Starships(ctx context.Context) (*[]*StarshipResolver, error) {
+	return NewStarships(ctx, NewStarshipsArgs{URLs: r.film.StarshipURLs})
 }
 
 // Vehicles resolves a list of vehicles that are in this film.
-func (r *FilmResolver) Vehicles(ctx context.Context) ([]*VehicleResolver, error) {
-	return []*VehicleResolver{}, nil
+func (r *FilmResolver) Vehicles(ctx context.Context) (*[]*VehicleResolver, error) {
+	return NewVehicles(ctx, NewVehiclesArgs{URLs: r.film.VehicleURLs})
 }
 
 // Characters resolves a list of characters that are in this film.
-func (r *FilmResolver) Characters(ctx context.Context) ([]*PersonResolver, error) {
-	return []*PersonResolver{}, nil
+func (r *FilmResolver) Characters(ctx context.Context) (*[]*PersonResolver, error) {
+	return NewPeople(ctx, NewPeopleArgs{URLs: r.film.CharacterURLs})
 }
 
 // Planets resolves a list of planets that are in this film.
-func (r *FilmResolver) Planets(ctx context.Context) ([]*PlanetResolver, error) {
-	return []*PlanetResolver{}, nil
+func (r *FilmResolver) Planets(ctx context.Context) (*[]*PlanetResolver, error) {
+	return NewPlanets(ctx, NewPlanetsArgs{URLs: r.film.PlanetURLs})
 }
 
 // CreatedAt resolves the RFC3339 date format of the time this resource was created.

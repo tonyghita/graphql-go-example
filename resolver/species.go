@@ -52,15 +52,19 @@ func NewSpecies(ctx context.Context, args NewSpeciesArgs) (*SpeciesResolver, err
 }
 
 // NewSpeciesList ...
-func NewSpeciesList(ctx context.Context, args NewSpeciesListArgs) ([]*SpeciesResolver, error) {
+func NewSpeciesList(ctx context.Context, args NewSpeciesListArgs) (*[]*SpeciesResolver, error) {
 	loader.PrimeSpecies(ctx, args.Page)
 
 	species, err := loader.LoadManySpecies(ctx, append(args.URLs, args.Page.URLs()...)...)
 	if err != nil {
-		return []*SpeciesResolver{}, err
+		switch err.(type) {
+		// TODO: implment error expansion.
+		default:
+			return nil, err
+		}
 	}
 
-	var resolvers = make([]*SpeciesResolver, len(species))
+	var resolvers = make([]*SpeciesResolver, 0, len(species))
 	var errs errors.Errors
 
 	for i, sp := range species {
@@ -69,10 +73,10 @@ func NewSpeciesList(ctx context.Context, args NewSpeciesListArgs) ([]*SpeciesRes
 			errs = append(errs, errors.WithIndex(err, i))
 		}
 
-		resolvers[i] = resolver
+		resolvers = append(resolvers, resolver)
 	}
 
-	return resolvers, errs.Err()
+	return &resolvers, errs.Err()
 }
 
 // ID resolves this species unique identifier.
@@ -142,16 +146,16 @@ func (r *SpeciesResolver) Language() string {
 
 // Homeworld ...
 func (r *SpeciesResolver) Homeworld(ctx context.Context) (*PlanetResolver, error) {
-	return nil, nil
+	return NewPlanet(ctx, NewPlanetArgs{URL: r.species.HomeworldURL})
 }
 
 // Characters ...
-func (r *SpeciesResolver) Characters(ctx context.Context) ([]*PersonResolver, error) {
-	return nil, nil
+func (r *SpeciesResolver) Characters(ctx context.Context) (*[]*PersonResolver, error) {
+	return NewPeople(ctx, NewPeopleArgs{URLs: r.species.PeopleURLs})
 }
 
 // Films ...
-func (r *SpeciesResolver) Films(ctx context.Context) ([]*FilmResolver, error) {
+func (r *SpeciesResolver) Films(ctx context.Context) (*[]*FilmResolver, error) {
 	return NewFilms(ctx, NewFilmsArgs{URLs: r.species.FilmURLs})
 }
 

@@ -48,13 +48,16 @@ func NewStarship(ctx context.Context, args NewStarshipArgs) (*StarshipResolver, 
 	return &StarshipResolver{ship: ship}, nil
 }
 
-func NewStarships(ctx context.Context, args NewStarshipsArgs) ([]*StarshipResolver, error) {
+func NewStarships(ctx context.Context, args NewStarshipsArgs) (*[]*StarshipResolver, error) {
 	loader.PrimeStarships(ctx, args.Page)
 
 	ships, err := loader.LoadStarships(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
+		switch err.(type) {
 		// TODO: improve error handling.
-		return []*StarshipResolver{}, err
+		default:
+			return nil, err
+		}
 	}
 
 	var resolvers = make([]*StarshipResolver, 0, len(ships))
@@ -69,7 +72,7 @@ func NewStarships(ctx context.Context, args NewStarshipsArgs) ([]*StarshipResolv
 		resolvers = append(resolvers, resolver)
 	}
 
-	return resolvers, errs.Err()
+	return &resolvers, errs.Err()
 }
 
 // ID resolves ...
@@ -197,12 +200,12 @@ func (r *StarshipResolver) ConsumablesDuration() string {
 }
 
 // Films resolves ...
-func (r *StarshipResolver) Films(ctx context.Context) ([]*FilmResolver, error) {
+func (r *StarshipResolver) Films(ctx context.Context) (*[]*FilmResolver, error) {
 	return NewFilms(ctx, NewFilmsArgs{URLs: r.ship.FilmURLs})
 }
 
 // Pilots resolves ...
-func (r *StarshipResolver) Pilots(ctx context.Context) ([]*PersonResolver, error) {
+func (r *StarshipResolver) Pilots(ctx context.Context) (*[]*PersonResolver, error) {
 	return NewPeople(ctx, NewPeopleArgs{URLs: r.ship.PilotURLs})
 }
 
