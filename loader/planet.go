@@ -10,18 +10,6 @@ import (
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
-type planetGetter interface {
-	Planet(ctx context.Context, url string) (swapi.Planet, error)
-}
-
-type planetLoader struct {
-	get planetGetter
-}
-
-func newPlanetLoader(client planetGetter) dataloader.BatchFunc {
-	return planetLoader{get: client}.loadBatch
-}
-
 func LoadPlanet(ctx context.Context, url string) (swapi.Planet, error) {
 	var planet swapi.Planet
 
@@ -43,34 +31,53 @@ func LoadPlanet(ctx context.Context, url string) (swapi.Planet, error) {
 	return planet, nil
 }
 
-func LoadPlanets(ctx context.Context, urls []string) ([]swapi.Planet, error) {
+func LoadPlanets(ctx context.Context, urls []string) (PlanetResults, error) {
+	var results []PlanetResult
+
 	ldr, err := extract(ctx, planetLoaderKey)
 	if err != nil {
-		return []swapi.Planet{}, err
+		return results, err
 	}
 
-	data, loadErrs := ldr.LoadMany(ctx, urls)()
+	data, errs := ldr.LoadMany(ctx, urls)()
+	results = make([]PlanetResult, 0, len(urls))
 
-	var (
-		planets = make([]swapi.Planet, 0, len(data))
-		errs    = make(errors.Errors, 0, len(loadErrs))
-	)
-
-	for i := range urls {
-		d, err := data[i], loadErrs[i]
-		if err != nil {
-			errs = append(errs, errors.WithIndex(err, i))
+	for i, d := range data {
+		var e error
+		if errs != nil {
+			e = errs[i]
 		}
 
 		planet, ok := d.(swapi.Planet)
-		if !ok && err == nil {
-			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
+		if !ok && e == nil {
+			e = errors.UnexpectedResponse
 		}
 
-		planets = append(planets, planet)
+		results = append(results, PlanetResult{Planet: planet, Error: e})
 	}
 
-	return planets, errs.Err()
+	return results, nil
+}
+
+type PlanetResult struct {
+	Planet swapi.Planet
+	Error  error
+}
+
+type PlanetResults []PlanetResult
+
+func (results PlanetResults) WithoutErrors() []swapi.Planet {
+	planets := make([]swapi.Planet, 0, len(results))
+
+	for _, r := range results {
+		if r.Error != nil {
+			continue
+		}
+
+		planets = append(planets, r.Planet)
+	}
+
+	return planets
 }
 
 func PrimePlanets(ctx context.Context, page swapi.PlanetPage) error {
@@ -83,6 +90,18 @@ func PrimePlanets(ctx context.Context, page swapi.PlanetPage) error {
 		ldr.Prime(p.URL, p)
 	}
 	return nil
+}
+
+type planetGetter interface {
+	Planet(ctx context.Context, url string) (swapi.Planet, error)
+}
+
+type planetLoader struct {
+	get planetGetter
+}
+
+func newPlanetLoader(client planetGetter) dataloader.BatchFunc {
+	return planetLoader{get: client}.loadBatch
 }
 
 func (ldr planetLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {

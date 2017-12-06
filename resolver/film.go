@@ -48,19 +48,18 @@ func NewFilm(ctx context.Context, args NewFilmArgs) (*FilmResolver, error) {
 }
 
 func NewFilms(ctx context.Context, args NewFilmsArgs) (*[]*FilmResolver, error) {
-	var errs errors.Errors
-
 	loader.PrimeFilms(ctx, args.Page)
 
-	films, err := loader.LoadFilms(ctx, append(args.URLs, args.Page.URLs()...))
+	results, err := loader.LoadFilms(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
-		switch err.(type) {
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
-	var resolvers = make([]*FilmResolver, len(films))
+	var (
+		films     = results.WithoutErrors()
+		resolvers = make([]*FilmResolver, 0, len(films))
+		errs      errors.Errors
+	)
 
 	for i, film := range films {
 		resolver, err := NewFilm(ctx, NewFilmArgs{Film: film})

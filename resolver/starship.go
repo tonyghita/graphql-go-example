@@ -51,15 +51,12 @@ func NewStarship(ctx context.Context, args NewStarshipArgs) (*StarshipResolver, 
 func NewStarships(ctx context.Context, args NewStarshipsArgs) (*[]*StarshipResolver, error) {
 	loader.PrimeStarships(ctx, args.Page)
 
-	ships, err := loader.LoadStarships(ctx, append(args.URLs, args.Page.URLs()...))
+	results, err := loader.LoadStarships(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
-		switch err.(type) {
-		// TODO: improve error handling.
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
+	var ships = results.WithoutErrors()
 	var resolvers = make([]*StarshipResolver, 0, len(ships))
 	var errs errors.Errors
 

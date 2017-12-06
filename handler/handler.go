@@ -86,10 +86,8 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var b []byte
 	if req.isBatch {
 		b, err = json.Marshal(responses)
-	} else {
-		if len(responses) > 0 {
-			b, err = json.Marshal(responses[0])
-		}
+	} else if len(responses) > 0 {
+		b, err = json.Marshal(responses[0])
 	}
 
 	if err != nil {

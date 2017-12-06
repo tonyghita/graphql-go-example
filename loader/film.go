@@ -31,37 +31,57 @@ func LoadFilm(ctx context.Context, url string) (swapi.Film, error) {
 	return film, nil
 }
 
-func LoadFilms(ctx context.Context, urls []string) ([]swapi.Film, error) {
+func LoadFilms(ctx context.Context, urls []string) (FilmResults, error) {
+	var results []FilmResult
 	ldr, err := extract(ctx, filmLoaderKey)
 	if err != nil {
-		return []swapi.Film{}, err
+		return results, err
 	}
 
-	data, loadErrs := ldr.LoadMany(ctx, urls)()
+	data, errs := ldr.LoadMany(ctx, urls)()
+	results = make([]FilmResult, 0, len(urls))
 
-	var (
-		films = make([]swapi.Film, 0, len(data))
-		errs  = make(errors.Errors, 0, len(loadErrs))
-	)
-
-	for i := range urls {
-		d, err := data[i], loadErrs[i]
-		if err != nil {
-			errs = append(errs, errors.WithIndex(err, i))
+	for i, d := range data {
+		var e error
+		if errs != nil {
+			e = errs[i]
 		}
 
 		film, ok := d.(swapi.Film)
-		if !ok && err == nil {
-			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
+		if !ok && e == nil {
+			e = errors.UnexpectedResponse
 		}
 
-		films = append(films, film)
+		results = append(results, FilmResult{Film: film, Error: e})
 	}
 
-	return films, errs.Err()
+	return results, nil
 }
 
-// PrimeFilms ...
+// FilmResult is the (data, error) pair result of loading a specific key.
+type FilmResult struct {
+	Film  swapi.Film
+	Error error
+}
+
+// FilmResults is a named type, so methods can be attached to []FilmResult.
+type FilmResults []FilmResult
+
+// WithoutErrors filters any result pairs with non-nil errors.
+func (results FilmResults) WithoutErrors() []swapi.Film {
+	var films = make([]swapi.Film, 0, len(results))
+
+	for _, r := range results {
+		if r.Error != nil {
+			continue
+		}
+
+		films = append(films, r.Film)
+	}
+
+	return films
+}
+
 func PrimeFilms(ctx context.Context, page swapi.FilmPage) error {
 	ldr, err := extract(ctx, filmLoaderKey)
 	if err != nil {

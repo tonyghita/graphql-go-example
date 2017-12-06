@@ -9,18 +9,6 @@ import (
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
-type vehicleGetter interface {
-	Vehicle(ctx context.Context, url string) (swapi.Vehicle, error)
-}
-
-type VehicleLoader struct {
-	get vehicleGetter
-}
-
-func newVehicleLoader(client vehicleGetter) dataloader.BatchFunc {
-	return VehicleLoader{get: client}.loadBatch
-}
-
 func LoadVehicle(ctx context.Context, url string) (swapi.Vehicle, error) {
 	ldr, err := extract(ctx, vehicleLoaderKey)
 	if err != nil {
@@ -40,34 +28,49 @@ func LoadVehicle(ctx context.Context, url string) (swapi.Vehicle, error) {
 	return vehicle, nil
 }
 
-func LoadVehicles(ctx context.Context, urls []string) ([]swapi.Vehicle, error) {
+func LoadVehicles(ctx context.Context, urls []string) (VehicleResults, error) {
+	var results []VehicleResult
+
 	ldr, err := extract(ctx, vehicleLoaderKey)
 	if err != nil {
-		return []swapi.Vehicle{}, err
+		return results, err
 	}
 
-	data, loadErrs := ldr.LoadMany(ctx, urls)()
+	data, errs := ldr.LoadMany(ctx, urls)()
 
-	var (
-		vehicles = make([]swapi.Vehicle, 0, len(data))
-		errs     = make(errors.Errors, 0, len(loadErrs))
-	)
-
-	for i := range urls {
-		d, err := data[i], loadErrs[i]
-		if err != nil {
-			errs = append(errs, errors.WithIndex(err, i))
+	for i, d := range data {
+		var e error
+		if errs != nil {
+			e = errs[i]
 		}
 
 		vehicle, ok := d.(swapi.Vehicle)
-		if !ok && err == nil {
-			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
+		if !ok && e == nil {
+			e = errors.UnexpectedResponse
 		}
 
-		vehicles = append(vehicles, vehicle)
+		results = append(results, VehicleResult{Vehicle: vehicle, Error: e})
 	}
 
-	return vehicles, errs.Err()
+	return results, nil
+}
+
+type VehicleResult struct {
+	Vehicle swapi.Vehicle
+	Error   error
+}
+
+type VehicleResults []VehicleResult
+
+func (results VehicleResults) WithoutErrors() []swapi.Vehicle {
+	vehicles := make([]swapi.Vehicle, 0, len(results))
+	for _, r := range results {
+		if r.Error != nil {
+			continue
+		}
+		vehicles = append(vehicles, r.Vehicle)
+	}
+	return vehicles
 }
 
 func PrimeVehicles(ctx context.Context, page swapi.VehiclePage) error {
@@ -80,6 +83,18 @@ func PrimeVehicles(ctx context.Context, page swapi.VehiclePage) error {
 		ldr.Prime(v.URL, v)
 	}
 	return nil
+}
+
+type vehicleGetter interface {
+	Vehicle(ctx context.Context, url string) (swapi.Vehicle, error)
+}
+
+type VehicleLoader struct {
+	get vehicleGetter
+}
+
+func newVehicleLoader(client vehicleGetter) dataloader.BatchFunc {
+	return VehicleLoader{get: client}.loadBatch
 }
 
 func (ldr VehicleLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {

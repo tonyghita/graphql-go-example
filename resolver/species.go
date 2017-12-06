@@ -55,15 +55,12 @@ func NewSpecies(ctx context.Context, args NewSpeciesArgs) (*SpeciesResolver, err
 func NewSpeciesList(ctx context.Context, args NewSpeciesListArgs) (*[]*SpeciesResolver, error) {
 	loader.PrimeSpecies(ctx, args.Page)
 
-	species, err := loader.LoadManySpecies(ctx, append(args.URLs, args.Page.URLs()...)...)
+	results, err := loader.LoadManySpecies(ctx, append(args.URLs, args.Page.URLs()...)...)
 	if err != nil {
-		switch err.(type) {
-		// TODO: implment error expansion.
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
+	var species = results.WithoutErrors()
 	var resolvers = make([]*SpeciesResolver, 0, len(species))
 	var errs errors.Errors
 

@@ -50,17 +50,12 @@ func NewPerson(ctx context.Context, args NewPersonArgs) (*PersonResolver, error)
 func NewPeople(ctx context.Context, args NewPeopleArgs) (*[]*PersonResolver, error) {
 	loader.PrimePeople(ctx, args.Page)
 
-	people, err := loader.LoadPeople(ctx, append(args.URLs, args.Page.URLs()...))
+	results, err := loader.LoadPeople(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
-		switch err.(type) {
-		// TODO: this error handling will have to be a bit more sophisticated.
-		// When all URLs provided fail to load people, return a consolidated error.
-		// Otherwise, filter out errored results.
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
+	var people = results.WithoutErrors()
 	var resolvers = make([]*PersonResolver, 0, len(people))
 	var errs errors.Errors
 

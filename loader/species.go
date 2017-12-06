@@ -10,18 +10,6 @@ import (
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
-type speciesGetter interface {
-	Species(ctx context.Context, url string) (swapi.Species, error)
-}
-
-type speciesLoader struct {
-	get speciesGetter
-}
-
-func newSpeciesLoader(client speciesGetter) dataloader.BatchFunc {
-	return speciesLoader{get: client}.loadBatch
-}
-
 func LoadSpecies(ctx context.Context, url string) (swapi.Species, error) {
 	var species swapi.Species
 
@@ -43,35 +31,53 @@ func LoadSpecies(ctx context.Context, url string) (swapi.Species, error) {
 	return species, nil
 }
 
-func LoadManySpecies(ctx context.Context, urls ...string) ([]swapi.Species, error) {
+func LoadManySpecies(ctx context.Context, urls ...string) (SpeciesResults, error) {
+	var results []SpeciesResult
+
 	ldr, err := extract(ctx, speciesLoaderKey)
 	if err != nil {
-		return []swapi.Species{}, err
+		return results, err
 	}
 
-	data, loadErrs := ldr.LoadMany(ctx, urls)()
+	data, errs := ldr.LoadMany(ctx, urls)()
+	results = make([]SpeciesResult, 0, len(urls))
 
-	var (
-		species = make([]swapi.Species, 0, len(urls))
-		errs    = make(errors.Errors, 0, len(loadErrs))
-	)
-
-	for i := range urls {
-		d, err := data[i], loadErrs[i]
-		if err != nil {
-			errs = append(errs, errors.WithIndex(err, i))
+	for i, d := range data {
+		var e error
+		if errs != nil {
+			e = errs[i]
 		}
 
-		sp, ok := d.(swapi.Species)
-		if !ok && err == nil {
-			// Ensure one error per element in the list.
-			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
+		species, ok := d.(swapi.Species)
+		if !ok && e == nil {
+			e = errors.UnexpectedResponse
 		}
 
-		species = append(species, sp)
+		results = append(results, SpeciesResult{Species: species, Error: e})
 	}
 
-	return species, errs.Err()
+	return results, nil
+}
+
+type SpeciesResult struct {
+	Species swapi.Species
+	Error   error
+}
+
+type SpeciesResults []SpeciesResult
+
+func (results SpeciesResults) WithoutErrors() []swapi.Species {
+	species := make([]swapi.Species, 0, len(results))
+
+	for _, r := range results {
+		if r.Error != nil {
+			continue
+		}
+
+		species = append(species, r.Species)
+	}
+
+	return species
 }
 
 func PrimeSpecies(ctx context.Context, page swapi.SpeciesPage) error {
@@ -85,6 +91,18 @@ func PrimeSpecies(ctx context.Context, page swapi.SpeciesPage) error {
 	}
 
 	return nil
+}
+
+type speciesGetter interface {
+	Species(ctx context.Context, url string) (swapi.Species, error)
+}
+
+type speciesLoader struct {
+	get speciesGetter
+}
+
+func newSpeciesLoader(client speciesGetter) dataloader.BatchFunc {
+	return speciesLoader{get: client}.loadBatch
 }
 
 func (ldr speciesLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {

@@ -48,28 +48,24 @@ func NewVehicle(ctx context.Context, args NewVehicleArgs) (*VehicleResolver, err
 }
 
 func NewVehicles(ctx context.Context, args NewVehiclesArgs) (*[]*VehicleResolver, error) {
-	var errs errors.Errors
-
 	loader.PrimeVehicles(ctx, args.Page)
 
-	vehicles, err := loader.LoadVehicles(ctx, append(args.URLs, args.Page.URLs()...))
+	results, err := loader.LoadVehicles(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
-		switch err.(type) {
-		// TODO: expand multi-error.
-		default:
-			return nil, err
-		}
+		return nil, err
 	}
 
+	var vehicles = results.WithoutErrors()
 	var resolvers = make([]*VehicleResolver, 0, len(vehicles))
+	var errs errors.Errors
 
 	for i, v := range vehicles {
-		r, err := NewVehicle(ctx, NewVehicleArgs{Vehicle: v})
+		resolver, err := NewVehicle(ctx, NewVehicleArgs{Vehicle: v})
 		if err != nil {
 			errs = append(errs, errors.WithIndex(err, i))
 		}
 
-		resolvers = append(resolvers, r)
+		resolvers = append(resolvers, resolver)
 	}
 
 	return &resolvers, errs.Err()

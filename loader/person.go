@@ -10,19 +10,6 @@ import (
 	"github.com/tonyghita/graphql-go-example/swapi"
 )
 
-type personGetter interface {
-	Person(ctx context.Context, url string) (swapi.Person, error)
-}
-
-// PersonLoader contains the RPC client necessary to load people.
-type personLoader struct {
-	get personGetter
-}
-
-func newPersonLoader(client personGetter) dataloader.BatchFunc {
-	return personLoader{get: client}.loadBatch
-}
-
 // LoadPerson loads a person resource from the SWAPI API URL.
 func LoadPerson(ctx context.Context, url string) (swapi.Person, error) {
 	var person swapi.Person
@@ -45,34 +32,51 @@ func LoadPerson(ctx context.Context, url string) (swapi.Person, error) {
 	return person, nil
 }
 
-func LoadPeople(ctx context.Context, urls []string) ([]swapi.Person, error) {
+func LoadPeople(ctx context.Context, urls []string) (PersonResults, error) {
+	var results []PersonResult
+
 	ldr, err := extract(ctx, personLoaderKey)
 	if err != nil {
-		return []swapi.Person{}, err
+		return results, err
 	}
 
-	data, loadErrs := ldr.LoadMany(ctx, urls)()
-
-	var (
-		people = make([]swapi.Person, 0, len(data))
-		errs   = make(errors.Errors, 0, len(loadErrs))
-	)
-
-	for i := range urls {
-		d, err := data[i], loadErrs[i]
-		if err != nil {
-			errs = append(errs, errors.WithIndex(err, i))
+	data, errs := ldr.LoadMany(ctx, urls)()
+	for i, d := range data {
+		var e error
+		if errs != nil {
+			e = errs[i]
 		}
 
 		person, ok := d.(swapi.Person)
-		if !ok && err == nil {
-			errs = append(errs, errors.WithIndex(errors.UnexpectedResponse, i))
+		if !ok && e == nil {
+			e = errors.UnexpectedResponse
 		}
 
-		people = append(people, person)
+		results = append(results, PersonResult{Person: person, Error: e})
 	}
 
-	return people, errs.Err()
+	return results, nil
+}
+
+type PersonResult struct {
+	Person swapi.Person
+	Error  error
+}
+
+type PersonResults []PersonResult
+
+func (results PersonResults) WithoutErrors() []swapi.Person {
+	people := make([]swapi.Person, 0, len(results))
+
+	for _, r := range results {
+		if r.Error != nil {
+			continue
+		}
+
+		people = append(people, r.Person)
+	}
+
+	return people
 }
 
 func PrimePeople(ctx context.Context, page swapi.PersonPage) error {
@@ -86,6 +90,19 @@ func PrimePeople(ctx context.Context, page swapi.PersonPage) error {
 	}
 
 	return nil
+}
+
+type personGetter interface {
+	Person(ctx context.Context, url string) (swapi.Person, error)
+}
+
+// PersonLoader contains the RPC client necessary to load people.
+type personLoader struct {
+	get personGetter
+}
+
+func newPersonLoader(client personGetter) dataloader.BatchFunc {
+	return personLoader{get: client}.loadBatch
 }
 
 func (ldr personLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
