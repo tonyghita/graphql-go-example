@@ -44,19 +44,19 @@ type GraphQL struct {
 func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Validate the request.
 	if ok := isSupported(r.Method); !ok {
-		respond(w, http.StatusMethodNotAllowed, errorMessage("only POST or GET requests are supported"))
+		respond(w, errorJSON("only POST or GET requests are supported"), http.StatusMethodNotAllowed)
 		return
 	}
 
 	req, err := parse(r)
 	if err != nil {
-		respond(w, http.StatusBadRequest, errorMessage(err.Error()))
+		respond(w, errorJSON(err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	n := len(req.queries)
 	if n == 0 {
-		respond(w, http.StatusBadRequest, errorMessage("no queries to execute"))
+		respond(w, errorJSON("no queries to execute"), http.StatusBadRequest)
 		return
 	}
 
@@ -81,33 +81,36 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	wg.Wait()
 
-	// Build the response.
 	// TODO: Massage errors before returning to API consumers.
-	var b []byte
+
+	// Marshal the response to JSON.
+	var resp []byte
 	if req.isBatch {
-		b, err = json.Marshal(responses)
+		resp, err = json.Marshal(responses)
 	} else if len(responses) > 0 {
-		b, err = json.Marshal(responses[0])
+		resp, err = json.Marshal(responses[0])
 	}
 
 	if err != nil {
-		respond(w, http.StatusInternalServerError, errorMessage("server error"))
+		respond(w, errorJSON("server error"), http.StatusInternalServerError)
 		return
 	}
 
-	respond(w, http.StatusOK, b)
+	respond(w, resp, http.StatusOK)
 }
 
-func respond(w http.ResponseWriter, status int, body []byte) {
-	w.WriteHeader(status)
-	_, _ = w.Write(body)
+func respond(w http.ResponseWriter, body []byte, code int) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(code)
+	fmt.Fprintln(w, body)
 }
 
 func isSupported(method string) bool {
 	return method == "POST" || method == "GET"
 }
 
-func errorMessage(msg string) []byte {
+func errorJSON(msg string) []byte {
 	buf := bytes.Buffer{}
 	fmt.Fprintf(&buf, `{"error": "%s"}`, msg)
 	return buf.Bytes()
