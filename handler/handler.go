@@ -73,15 +73,14 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	for i, q := range req.queries {
 		go func(i int, q Query) {
-			r := h.Schema.Exec(ctx, q.Query, q.OpName, q.Variables)
-			responses[i] = r
+			res := h.Schema.Exec(ctx, q.Query, q.OpName, q.Variables)
+			// TODO: "Massage" response errors here.
+			responses[i] = res
 			wg.Done()
 		}(i, q)
 	}
 
 	wg.Wait()
-
-	// TODO: Massage errors before returning to API consumers.
 
 	// Marshal the response to JSON.
 	var resp []byte
