@@ -1,10 +1,12 @@
 package dataloader
 
+import "context"
+
 // The Cache interface. If a custom cache is provided, it must implement this interface.
 type Cache interface {
-	Get(string) (Thunk, bool)
-	Set(string, Thunk)
-	Delete(string) bool
+	Get(context.Context, interface{}) (Thunk, bool)
+	Set(context.Context, interface{}, Thunk)
+	Delete(context.Context, interface{}) bool
 	Clear()
 }
 
@@ -14,13 +16,13 @@ type Cache interface {
 type NoCache struct{}
 
 // Get is a NOOP
-func (c *NoCache) Get(string) (Thunk, bool) { return nil, false }
+func (c *NoCache) Get(context.Context, interface{}) (Thunk, bool) { return nil, false }
 
 // Set is a NOOP
-func (c *NoCache) Set(string, Thunk) { return }
+func (c *NoCache) Set(context.Context, interface{}, Thunk) { return }
 
 // Delete is a NOOP
-func (c *NoCache) Delete(string) bool { return false }
+func (c *NoCache) Delete(context.Context, interface{}) bool { return false }
 
 // Clear is a NOOP
 func (c *NoCache) Clear() { return }

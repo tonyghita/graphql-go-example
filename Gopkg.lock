@@ -14,10 +14,10 @@
   revision = "beff08417b04a91f0a7618b55786d63eec833b9f"
 
 [[projects]]
-  branch = "v2"
   name = "github.com/nicksrandall/dataloader"
   packages = ["."]
-  revision = "0197025aef58ee2eaab9c5535cbd9616f4b82dac"
+  revision = "02614916d80019649f6461b3216d575b0b6ced0d"
+  version = "v4.1.0"
 
 [[projects]]
   name = "github.com/opentracing/opentracing-go"
@@ -40,6 +40,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e3324414fe01b64a61a61cea4fe77d331b961b12f432320905eb4dbb4d8ed4c0"
+  inputs-digest = "75a544de0083f480162fcefef62ca9ce991c1e2fa703ce59fa7ca75a1515335a"
   solver-name = "gps-cdcl"
   solver-version = 1

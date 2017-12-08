@@ -5,7 +5,7 @@ required = ["github.com/jteeuwen/go-bindata"]
   name = "github.com/neelance/graphql-go"
 
 [[constraint]]
-  branch = "v2"
+  version = "v4.1.0"
   name = "github.com/nicksrandall/dataloader"
 
 [[constraint]]

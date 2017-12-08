@@ -20,18 +20,18 @@ import (
 // different access permissions and consider creating a new instance per
 // web request.
 type Interface interface {
-	Load(context.Context, string) Thunk
-	LoadMany(context.Context, []string) ThunkMany
-	Clear(string) Interface
+	Load(context.Context, interface{}) Thunk
+	LoadMany(context.Context, []interface{}) ThunkMany
+	Clear(context.Context, string) Interface
 	ClearAll() Interface
-	Prime(key string, value interface{}) Interface
+	Prime(ctx context.Context, key string, value interface{}) Interface
 }
 
 // BatchFunc is a function, which when given a slice of keys (string), returns an slice of `results`.
 // It's important that the length of the input keys matches the length of the output results.
 //
 // The keys passed to this function are guaranteed to be unique
-type BatchFunc func(context.Context, []string) []*Result
+type BatchFunc func(context.Context, []interface{}) []*Result
 
 // Result is the data structure that a BatchFunc returns.
 // It contains the resolved data, and any errors that may have occurred while fetching the data.
@@ -100,7 +100,7 @@ type ThunkMany func() ([]interface{}, []error)
 
 // type used to on input channel
 type batchRequest struct {
-	key     string
+	key     interface{}
 	channel chan *Result
 }
 
@@ -191,8 +191,9 @@ func NewBatchedLoader(batchFn BatchFunc, opts ...Option) *Loader {
 }
 
 // Load load/resolves the given key, returning a channel that will contain the value and error
-func (l *Loader) Load(originalContext context.Context, key string) Thunk {
+func (l *Loader) Load(originalContext context.Context, key interface{}) Thunk {
 	ctx, finish := l.tracer.TraceLoad(originalContext, key)
+
 	c := make(chan *Result, 1)
 	var result struct {
 		mu    sync.RWMutex
@@ -201,7 +202,7 @@ func (l *Loader) Load(originalContext context.Context, key string) Thunk {
 
 	// lock to prevent duplicate keys coming in before item has been added to cache.
 	l.cacheLock.Lock()
-	if v, ok := l.cache.Get(key); ok {
+	if v, ok := l.cache.Get(ctx, key); ok {
 		defer finish(v)
 		defer l.cacheLock.Unlock()
 		return v
@@ -223,8 +224,9 @@ func (l *Loader) Load(originalContext context.Context, key string) Thunk {
 		defer result.mu.RUnlock()
 		return result.value.Data, result.value.Error
 	}
+	defer finish(thunk)
 
-	l.cache.Set(key, thunk)
+	l.cache.Set(ctx, key, thunk)
 	l.cacheLock.Unlock()
 
 	// this is sent to batch fn. It contains the key and the channel to return the
@@ -236,7 +238,7 @@ func (l *Loader) Load(originalContext context.Context, key string) Thunk {
 	if l.curBatcher == nil {
 		l.curBatcher = l.newBatcher(l.silent, l.tracer)
 		// start the current batcher batch function
-		go l.curBatcher.batch(ctx)
+		go l.curBatcher.batch(originalContext)
 		// start a sleeper for the current batcher
 		l.endSleeper = make(chan bool)
 		go l.sleeper(l.curBatcher, l.endSleeper)
@@ -261,33 +263,46 @@ func (l *Loader) Load(originalContext context.Context, key string) Thunk {
 	}
 	l.batchLock.Unlock()
 
-	defer finish(thunk)
 	return thunk
 }
 
 // LoadMany loads mulitiple keys, returning a thunk (type: ThunkMany) that will resolve the keys passed in.
-func (l *Loader) LoadMany(originalContext context.Context, keys []string) ThunkMany {
+func (l *Loader) LoadMany(originalContext context.Context, keys []interface{}) ThunkMany {
 	ctx, finish := l.tracer.TraceLoadMany(originalContext, keys)
-	length := len(keys)
-	data := make([]interface{}, length)
-	errors := make([]error, length)
-	c := make(chan *ResultMany, 1)
-	wg := sync.WaitGroup{}
+
+	var (
+		length = len(keys)
+		data   = make([]interface{}, length)
+		errors = make([]error, length)
+		c      = make(chan *ResultMany, 1)
+		wg     sync.WaitGroup
+	)
 
 	wg.Add(length)
 	for i := range keys {
-		go func(i int) {
+		go func(ctx context.Context, i int) {
 			defer wg.Done()
 			thunk := l.Load(ctx, keys[i])
 			result, err := thunk()
 			data[i] = result
 			errors[i] = err
-		}(i)
+		}(ctx, i)
 	}
 
 	go func() {
 		wg.Wait()
-		c <- &ResultMany{data, errors}
+
+		// errs is nil unless there exists a non-nil error.
+		// This prevents dataloader from returning a slice of all-nil errors.
+		var errs []error
+		for _, e := range errors {
+			if e != nil {
+				errs = errors
+				break
+			}
+		}
+
+		c <- &ResultMany{Data: data, Error: errs}
 		close(c)
 	}()
 
@@ -318,9 +333,9 @@ func (l *Loader) LoadMany(originalContext context.Context, keys []string) ThunkM
 }
 
 // Clear clears the value at `key` from the cache, it it exsits. Returs self for method chaining
-func (l *Loader) Clear(key string) Interface {
+func (l *Loader) Clear(ctx context.Context, key string) Interface {
 	l.cacheLock.Lock()
-	l.cache.Delete(key)
+	l.cache.Delete(ctx, key)
 	l.cacheLock.Unlock()
 	return l
 }
@@ -336,12 +351,12 @@ func (l *Loader) ClearAll() Interface {
 
 // Prime adds the provided key and value to the cache. If the key already exists, no change is made.
 // Returns self for method chaining
-func (l *Loader) Prime(key string, value interface{}) Interface {
-	if _, ok := l.cache.Get(key); !ok {
+func (l *Loader) Prime(ctx context.Context, key string, value interface{}) Interface {
+	if _, ok := l.cache.Get(ctx, key); !ok {
 		thunk := func() (interface{}, error) {
 			return value, nil
 		}
-		l.cache.Set(key, thunk)
+		l.cache.Set(ctx, key, thunk)
 	}
 	return l
 }
@@ -384,7 +399,7 @@ func (b *batcher) end() {
 
 // execute the batch of all items in queue
 func (b *batcher) batch(originalContext context.Context) {
-	var keys []string
+	var keys []interface{}
 	var reqs []*batchRequest
 	var items []*Result
 	var panicErr interface{}
