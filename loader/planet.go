@@ -25,7 +25,7 @@ func LoadPlanet(ctx context.Context, url string) (swapi.Planet, error) {
 
 	planet, ok := data.(swapi.Planet)
 	if !ok {
-		return planet, errors.UnexpectedResponse
+		return planet, errors.WrongType(planet, data)
 	}
 
 	return planet, nil
@@ -50,7 +50,7 @@ func LoadPlanets(ctx context.Context, urls []string) (PlanetResults, error) {
 
 		planet, ok := d.(swapi.Planet)
 		if !ok && e == nil {
-			e = errors.UnexpectedResponse
+			e = errors.WrongType(planet, d)
 		}
 
 		results = append(results, PlanetResult{Planet: planet, Error: e})
@@ -119,7 +119,7 @@ func (ldr planetLoader) loadBatch(ctx context.Context, urls []interface{}) []*da
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
+				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
 				return
 			}
 

@@ -26,7 +26,7 @@ func LoadPerson(ctx context.Context, url string) (swapi.Person, error) {
 
 	person, ok := data.(swapi.Person)
 	if !ok {
-		return person, errors.UnexpectedResponse
+		return person, errors.WrongType(person, data)
 	}
 
 	return person, nil
@@ -49,7 +49,7 @@ func LoadPeople(ctx context.Context, urls []string) (PersonResults, error) {
 
 		person, ok := d.(swapi.Person)
 		if !ok && e == nil {
-			e = errors.UnexpectedResponse
+			e = errors.WrongType(person, d)
 		}
 
 		results = append(results, PersonResult{Person: person, Error: e})
@@ -120,7 +120,7 @@ func (ldr personLoader) loadBatch(ctx context.Context, urls []interface{}) []*da
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
+				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
 				return
 			}
 

@@ -25,7 +25,7 @@ func LoadFilm(ctx context.Context, url string) (swapi.Film, error) {
 
 	film, ok := data.(swapi.Film)
 	if !ok {
-		return film, errors.UnexpectedResponse
+		return film, errors.WrongType(film, data)
 	}
 
 	return film, nil
@@ -49,7 +49,7 @@ func LoadFilms(ctx context.Context, urls []string) (FilmResults, error) {
 
 		film, ok := d.(swapi.Film)
 		if !ok && e == nil {
-			e = errors.UnexpectedResponse
+			e = errors.WrongType(film, d)
 		}
 
 		results = append(results, FilmResult{Film: film, Error: e})
@@ -123,7 +123,7 @@ func (ldr filmLoader) loadBatch(ctx context.Context, urls []interface{}) []*data
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
+				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
 				return
 			}
 

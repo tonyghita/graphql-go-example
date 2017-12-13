@@ -25,7 +25,7 @@ func LoadSpecies(ctx context.Context, url string) (swapi.Species, error) {
 
 	species, ok := data.(swapi.Species)
 	if !ok {
-		return species, errors.UnexpectedResponse
+		return species, errors.WrongType(species, data)
 	}
 
 	return species, nil
@@ -50,7 +50,7 @@ func LoadManySpecies(ctx context.Context, urls ...string) (SpeciesResults, error
 
 		species, ok := d.(swapi.Species)
 		if !ok && e == nil {
-			err = errors.UnexpectedResponse
+			err = errors.WrongType(species, d)
 		}
 
 		results = append(results, SpeciesResult{Species: species, Error: e})
@@ -120,7 +120,7 @@ func (ldr speciesLoader) loadBatch(ctx context.Context, urls []interface{}) []*d
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
+				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
 				return
 			}
 

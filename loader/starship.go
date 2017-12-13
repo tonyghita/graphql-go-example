@@ -25,7 +25,7 @@ func LoadStarship(ctx context.Context, url string) (swapi.Starship, error) {
 
 	ship, ok := data.(swapi.Starship)
 	if !ok {
-		return ship, errors.UnexpectedResponse
+		return ship, errors.WrongType(ship, data)
 	}
 
 	return ship, nil
@@ -50,7 +50,7 @@ func LoadStarships(ctx context.Context, urls []string) (StarshipResults, error) 
 
 		ship, ok := d.(swapi.Starship)
 		if !ok && e == nil {
-			e = errors.UnexpectedResponse
+			e = errors.WrongType(ship, d)
 		}
 
 		results = append(results, StarshipResult{Starship: ship, Error: e})
@@ -119,7 +119,7 @@ func (ldr StarshipLoader) loadBatch(ctx context.Context, urls []interface{}) []*
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
+				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
 				return
 			}
 

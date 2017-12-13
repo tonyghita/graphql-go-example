@@ -22,7 +22,7 @@ func LoadVehicle(ctx context.Context, url string) (swapi.Vehicle, error) {
 
 	vehicle, ok := data.(swapi.Vehicle)
 	if !ok {
-		return swapi.Vehicle{}, errors.UnexpectedResponse
+		return swapi.Vehicle{}, errors.WrongType(vehicle, data)
 	}
 
 	return vehicle, nil
@@ -46,7 +46,7 @@ func LoadVehicles(ctx context.Context, urls []string) (VehicleResults, error) {
 
 		vehicle, ok := d.(swapi.Vehicle)
 		if !ok && e == nil {
-			e = errors.UnexpectedResponse
+			e = errors.WrongType(vehicle, d)
 		}
 
 		results = append(results, VehicleResult{Vehicle: vehicle, Error: e})
@@ -112,7 +112,7 @@ func (ldr VehicleLoader) loadBatch(ctx context.Context, urls []interface{}) []*d
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
+				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
 				return
 			}
 
