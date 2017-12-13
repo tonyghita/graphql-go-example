@@ -112,7 +112,7 @@ func (ldr VehicleLoader) loadBatch(ctx context.Context, urls []interface{}) []*d
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType("string", v)}
+				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
 				return
 			}
 

@@ -123,7 +123,7 @@ func (ldr filmLoader) loadBatch(ctx context.Context, urls []interface{}) []*data
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType("string", v)}
+				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
 				return
 			}
 

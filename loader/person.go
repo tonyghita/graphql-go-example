@@ -114,12 +114,19 @@ func (ldr personLoader) loadBatch(ctx context.Context, urls []interface{}) []*da
 
 	wg.Add(n)
 
-	for i, url := range urls {
-		go func(ctx context.Context, url string, i int) {
+	for i, value := range urls {
+		go func(i int, v interface{}) {
+			defer wg.Done()
+
+			url, ok := v.(string)
+			if !ok {
+				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
+				return
+			}
+
 			data, err := ldr.get.Person(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
-			wg.Done()
-		}(ctx, url.(string), i)
+		}(i, value)
 	}
 
 	wg.Wait()

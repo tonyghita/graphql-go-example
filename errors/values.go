@@ -5,6 +5,6 @@ var (
 	UnexpectedResponse = New("unexpected response")
 )
 
-func WrongKeyType(expected string, actual interface{}) error {
-	return Errorf("wrong type: wanted %s, got %T", expected, actual)
+func WrongKeyType(expected, actual interface{}) error {
+	return Errorf("wrong type: wanted %T, got %T", expected, actual)
 }

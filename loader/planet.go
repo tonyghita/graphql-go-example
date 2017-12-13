@@ -119,7 +119,7 @@ func (ldr planetLoader) loadBatch(ctx context.Context, urls []interface{}) []*da
 
 			url, ok := v.(string)
 			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongKeyType("string", v)}
+				results[i] = &dataloader.Result{Error: errors.WrongKeyType(url, v)}
 				return
 			}
 
