@@ -39,7 +39,7 @@ func LoadManySpecies(ctx context.Context, urls ...string) (SpeciesResults, error
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, urls)()
+	data, errs := ldr.LoadMany(ctx, strings(urls).copy())()
 	results = make([]SpeciesResult, 0, len(urls))
 
 	for i, d := range data {
@@ -50,7 +50,7 @@ func LoadManySpecies(ctx context.Context, urls ...string) (SpeciesResults, error
 
 		species, ok := d.(swapi.Species)
 		if !ok && e == nil {
-			e = errors.UnexpectedResponse
+			err = errors.UnexpectedResponse
 		}
 
 		results = append(results, SpeciesResult{Species: species, Error: e})
@@ -87,7 +87,7 @@ func PrimeSpecies(ctx context.Context, page swapi.SpeciesPage) error {
 	}
 
 	for _, s := range page.Species {
-		ldr.Prime(s.URL, s)
+		ldr.Prime(ctx, s.URL, s)
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func newSpeciesLoader(client speciesGetter) dataloader.BatchFunc {
 	return speciesLoader{get: client}.loadBatch
 }
 
-func (ldr speciesLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (ldr speciesLoader) loadBatch(ctx context.Context, urls []interface{}) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -114,12 +114,19 @@ func (ldr speciesLoader) loadBatch(ctx context.Context, urls []string) []*datalo
 
 	wg.Add(n)
 
-	for i, url := range urls {
-		go func(i int, url string) {
-			sp, err := ldr.get.Species(ctx, url)
-			results[i] = &dataloader.Result{Data: sp, Error: err}
-			wg.Done()
-		}(i, url)
+	for i, value := range urls {
+		go func(i int, v interface{}) {
+			defer wg.Done()
+
+			url, ok := v.(string)
+			if !ok {
+				results[i] = &dataloader.Result{Error: errors.WrongKeyType("string", v)}
+				return
+			}
+
+			data, err := ldr.get.Species(ctx, url)
+			results[i] = &dataloader.Result{Data: data, Error: err}
+		}(i, value)
 	}
 
 	wg.Wait()

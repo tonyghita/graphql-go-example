@@ -40,7 +40,7 @@ func LoadPeople(ctx context.Context, urls []string) (PersonResults, error) {
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, urls)()
+	data, errs := ldr.LoadMany(ctx, strings(urls).copy())()
 	for i, d := range data {
 		var e error
 		if errs != nil {
@@ -86,7 +86,7 @@ func PrimePeople(ctx context.Context, page swapi.PersonPage) error {
 	}
 
 	for _, p := range page.People {
-		ldr.Prime(p.URL, p)
+		ldr.Prime(ctx, p.URL, p)
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func newPersonLoader(client personGetter) dataloader.BatchFunc {
 	return personLoader{get: client}.loadBatch
 }
 
-func (ldr personLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (ldr personLoader) loadBatch(ctx context.Context, urls []interface{}) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -119,7 +119,7 @@ func (ldr personLoader) loadBatch(ctx context.Context, urls []string) []*dataloa
 			data, err := ldr.get.Person(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
 			wg.Done()
-		}(ctx, url, i)
+		}(ctx, url.(string), i)
 	}
 
 	wg.Wait()

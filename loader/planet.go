@@ -39,7 +39,7 @@ func LoadPlanets(ctx context.Context, urls []string) (PlanetResults, error) {
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, urls)()
+	data, errs := ldr.LoadMany(ctx, strings(urls).copy())()
 	results = make([]PlanetResult, 0, len(urls))
 
 	for i, d := range data {
@@ -87,7 +87,7 @@ func PrimePlanets(ctx context.Context, page swapi.PlanetPage) error {
 	}
 
 	for _, p := range page.Planets {
-		ldr.Prime(p.URL, p)
+		ldr.Prime(ctx, p.URL, p)
 	}
 	return nil
 }
@@ -104,7 +104,7 @@ func newPlanetLoader(client planetGetter) dataloader.BatchFunc {
 	return planetLoader{get: client}.loadBatch
 }
 
-func (ldr planetLoader) loadBatch(ctx context.Context, urls []string) []*dataloader.Result {
+func (ldr planetLoader) loadBatch(ctx context.Context, urls []interface{}) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -113,12 +113,19 @@ func (ldr planetLoader) loadBatch(ctx context.Context, urls []string) []*dataloa
 
 	wg.Add(n)
 
-	for i, url := range urls {
-		go func(ctx context.Context, i int, url string) {
+	for i, value := range urls {
+		go func(i int, v interface{}) {
+			defer wg.Done()
+
+			url, ok := v.(string)
+			if !ok {
+				results[i] = &dataloader.Result{Error: errors.WrongKeyType("string", v)}
+				return
+			}
+
 			data, err := ldr.get.Planet(ctx, url)
 			results[i] = &dataloader.Result{Data: data, Error: err}
-			wg.Done()
-		}(ctx, i, url)
+		}(i, value)
 	}
 
 	wg.Wait()

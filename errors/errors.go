@@ -41,3 +41,7 @@ func (e Errors) Error() string {
 func New(message string) error {
 	return pkgerrors.New(message)
 }
+
+func Errorf(format string, args ...interface{}) error {
+	return pkgerrors.Errorf(format, args)
+}
