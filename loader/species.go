@@ -39,7 +39,7 @@ func LoadManySpecies(ctx context.Context, urls ...string) (SpeciesResults, error
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, strings(urls).copy())()
+	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
 	results = make([]SpeciesResult, 0, len(urls))
 
 	for i, d := range data {

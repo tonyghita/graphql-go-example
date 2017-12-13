@@ -39,7 +39,7 @@ func LoadStarships(ctx context.Context, urls []string) (StarshipResults, error) 
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, strings(urls).copy())()
+	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
 	results = make([]StarshipResult, 0, len(urls))
 
 	for i, d := range data {

@@ -40,7 +40,7 @@ func LoadPeople(ctx context.Context, urls []string) (PersonResults, error) {
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, strings(urls).copy())()
+	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
 	for i, d := range data {
 		var e error
 		if errs != nil {

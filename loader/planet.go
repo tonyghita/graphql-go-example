@@ -39,7 +39,7 @@ func LoadPlanets(ctx context.Context, urls []string) (PlanetResults, error) {
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, strings(urls).copy())()
+	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
 	results = make([]PlanetResult, 0, len(urls))
 
 	for i, d := range data {

@@ -82,15 +82,9 @@ func (k key) String() string {
 	return string(k)
 }
 
-// strings aliases `[]string` to add copy-to-interface-slice method on `[]string`.
-//
-// The reason for this is to leave room for non-string keys to have their own copy() methods,
-// rather than creating a `func copy<Type>ToSliceOfEmptyInterface()` for each type.
-type strings []string
-
-// copy the string slice elements to an equally sized interface slice.
+// Copy the string slice elements to an equally sized interface slice.
 // Why this must be done: https://github.com/golang/go/wiki/InterfaceSlice
-func (strs strings) copy() []interface{} {
+func copyStrings(strs []string) []interface{} {
 	slc := make([]interface{}, len(strs))
 	for i, s := range strs {
 		slc[i] = s
