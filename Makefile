@@ -15,4 +15,7 @@ schema: ; $(info $(M) Embedding schema files into binary...)
 setup: ; $(info $(M) Fetching github.com/golang/dep...)
 	go get -u github.com/golang/dep/cmd/dep
 
-.PHONY: build clean dep schema setup
+server: ; $(info $(M) Starting development server...)
+	go run server.go
+
+.PHONY: build clean dep schema setup server
