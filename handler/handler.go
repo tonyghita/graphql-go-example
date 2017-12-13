@@ -60,7 +60,16 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: User authentication should happen here, if needed.
+	// NOTE: User authentication should happen here, if needed.
+	//
+	// Authentication determines who the request originated from.
+	// Authorization business logic (in services, not this API) will rely on this authentication data.
+	//
+	// We don't need it for this example application, but a typical production application would
+	// perform request authentication.
+	//
+	// The result of authentication should probably be placed on the request context so it can be
+	// passed to resolvers and loaders.
 
 	// Execute the request.
 	var (
