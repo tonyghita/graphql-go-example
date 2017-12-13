@@ -10,6 +10,7 @@ import (
 
 	graphql "github.com/neelance/graphql-go"
 
+	"github.com/tonyghita/graphql-go-example/errors"
 	"github.com/tonyghita/graphql-go-example/loader"
 )
 
@@ -83,7 +84,11 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i, q := range req.queries {
 		go func(i int, q Query) {
 			res := h.Schema.Exec(ctx, q.Query, q.OpName, q.Variables)
-			// TODO: "Massage" response errors here.
+
+			// We have to do some work here to expand errors when it is possible for a resolver to return
+			// more than one error (for example, a list resolver).
+			res.Errors = errors.Expand(res.Errors)
+
 			responses[i] = res
 			wg.Done()
 		}(i, q)
@@ -111,7 +116,7 @@ func respond(w http.ResponseWriter, body []byte, code int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
-	fmt.Fprintln(w, body)
+	w.Write(body)
 }
 
 func isSupported(method string) bool {

@@ -37,6 +37,10 @@ func (e Errors) Error() string {
 	return buf.String()
 }
 
+func (e Errors) Slice() []error {
+	return []error(e)
+}
+
 // This is convenience method so we don't have to fight with package imports.
 func New(message string) error {
 	return pkgerrors.New(message)
