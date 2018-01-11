@@ -122,7 +122,7 @@ func respond(w http.ResponseWriter, body []byte, code int) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
-	w.Write(body)
+	_, _ = w.Write(body)
 }
 
 func isSupported(method string) bool {
