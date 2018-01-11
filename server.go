@@ -44,6 +44,7 @@ func main() {
 
 	// Register handlers to routes.
 	mux := http.NewServeMux()
+	mux.Handle("/", handler.GraphiQL{})
 	mux.Handle("/graphql/", h)
 	mux.Handle("/graphql", h) // Register without a trailing slash to avoid redirect.
 
