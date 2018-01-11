@@ -50,7 +50,7 @@ func LoadManySpecies(ctx context.Context, urls ...string) (SpeciesResults, error
 
 		species, ok := d.(swapi.Species)
 		if !ok && e == nil {
-			err = errors.WrongType(species, d)
+			e = errors.WrongType(species, d)
 		}
 
 		results = append(results, SpeciesResult{Species: species, Error: e})
