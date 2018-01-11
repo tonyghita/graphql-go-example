@@ -96,6 +96,12 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	wg.Wait()
 
+	// NOTE: Before returning the response to the user, we can inspect the results for errors
+	// and log them.
+	//
+	// However, be mindful that the standard go log package uses a global mutex to protect writes
+	// to stdout. In a log-happy service, you may see service goroutines start to block on that mutex.
+
 	// Marshal the response to JSON.
 	var resp []byte
 	if req.isBatch {
