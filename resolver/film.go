@@ -48,7 +48,10 @@ func NewFilm(ctx context.Context, args NewFilmArgs) (*FilmResolver, error) {
 }
 
 func NewFilms(ctx context.Context, args NewFilmsArgs) (*[]*FilmResolver, error) {
-	loader.PrimeFilms(ctx, args.Page)
+	err := loader.PrimeFilms(ctx, args.Page)
+	if err != nil {
+		return nil, err
+	}
 
 	results, err := loader.LoadFilms(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {

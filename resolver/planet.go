@@ -49,7 +49,10 @@ func NewPlanet(ctx context.Context, args NewPlanetArgs) (*PlanetResolver, error)
 }
 
 func NewPlanets(ctx context.Context, args NewPlanetsArgs) (*[]*PlanetResolver, error) {
-	loader.PrimePlanets(ctx, args.Page)
+	err := loader.PrimePlanets(ctx, args.Page)
+	if err != nil {
+		return nil, err
+	}
 
 	results, err := loader.LoadPlanets(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {

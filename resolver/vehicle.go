@@ -48,7 +48,10 @@ func NewVehicle(ctx context.Context, args NewVehicleArgs) (*VehicleResolver, err
 }
 
 func NewVehicles(ctx context.Context, args NewVehiclesArgs) (*[]*VehicleResolver, error) {
-	loader.PrimeVehicles(ctx, args.Page)
+	err := loader.PrimeVehicles(ctx, args.Page)
+	if err != nil {
+		return nil, err
+	}
 
 	results, err := loader.LoadVehicles(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {

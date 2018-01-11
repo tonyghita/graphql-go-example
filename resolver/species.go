@@ -53,7 +53,10 @@ func NewSpecies(ctx context.Context, args NewSpeciesArgs) (*SpeciesResolver, err
 
 // NewSpeciesList ...
 func NewSpeciesList(ctx context.Context, args NewSpeciesListArgs) (*[]*SpeciesResolver, error) {
-	loader.PrimeSpecies(ctx, args.Page)
+	err := loader.PrimeSpecies(ctx, args.Page)
+	if err != nil {
+		return nil, err
+	}
 
 	results, err := loader.LoadManySpecies(ctx, append(args.URLs, args.Page.URLs()...)...)
 	if err != nil {

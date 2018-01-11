@@ -49,7 +49,10 @@ func NewStarship(ctx context.Context, args NewStarshipArgs) (*StarshipResolver, 
 }
 
 func NewStarships(ctx context.Context, args NewStarshipsArgs) (*[]*StarshipResolver, error) {
-	loader.PrimeStarships(ctx, args.Page)
+	err := loader.PrimeStarships(ctx, args.Page)
+	if err != nil {
+		return nil, err
+	}
 
 	results, err := loader.LoadStarships(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {

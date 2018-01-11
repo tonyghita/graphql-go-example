@@ -48,7 +48,10 @@ func NewPerson(ctx context.Context, args NewPersonArgs) (*PersonResolver, error)
 }
 
 func NewPeople(ctx context.Context, args NewPeopleArgs) (*[]*PersonResolver, error) {
-	loader.PrimePeople(ctx, args.Page)
+	err := loader.PrimePeople(ctx, args.Page)
+	if err != nil {
+		return nil, err
+	}
 
 	results, err := loader.LoadPeople(ctx, append(args.URLs, args.Page.URLs()...))
 	if err != nil {
