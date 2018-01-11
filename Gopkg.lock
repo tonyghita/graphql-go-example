@@ -10,18 +10,36 @@
 [[projects]]
   branch = "master"
   name = "github.com/neelance/graphql-go"
-  packages = [".","errors","internal/common","internal/exec","internal/exec/packer","internal/exec/resolvable","internal/exec/selected","internal/query","internal/schema","internal/validation","introspection","log","trace"]
+  packages = [
+    ".",
+    "errors",
+    "internal/common",
+    "internal/exec",
+    "internal/exec/packer",
+    "internal/exec/resolvable",
+    "internal/exec/selected",
+    "internal/query",
+    "internal/schema",
+    "internal/validation",
+    "introspection",
+    "log",
+    "trace"
+  ]
   revision = "beff08417b04a91f0a7618b55786d63eec833b9f"
 
 [[projects]]
   name = "github.com/nicksrandall/dataloader"
   packages = ["."]
-  revision = "02614916d80019649f6461b3216d575b0b6ced0d"
-  version = "v4.1.0"
+  revision = "78139374585c29dcb97b8f33089ed11959e4be59"
+  version = "v5"
 
 [[projects]]
   name = "github.com/opentracing/opentracing-go"
-  packages = [".","ext","log"]
+  packages = [
+    ".",
+    "ext",
+    "log"
+  ]
   revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
   version = "v1.0.2"
 
@@ -40,6 +58,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "75a544de0083f480162fcefef62ca9ce991c1e2fa703ce59fa7ca75a1515335a"
+  inputs-digest = "d723aaef390b0938faf74d54007c49ff9bec29585902b03ca8cbca1a04d4fd42"
   solver-name = "gps-cdcl"
   solver-version = 1
