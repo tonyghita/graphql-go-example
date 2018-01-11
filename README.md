@@ -3,6 +3,8 @@
 This is an example of how [github.com/neelance/graphql-go](https://github.com/neelance/graphql-go)
 might be used in production.
 
-## Vendoring
+## Usage
 
-Uses `dep`.
+```sh
+make server
+```
