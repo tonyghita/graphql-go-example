@@ -18,7 +18,7 @@ func LoadFilm(ctx context.Context, url string) (swapi.Film, error) {
 		return film, err
 	}
 
-	data, err := ldr.Load(ctx, url)()
+	data, err := ldr.Load(ctx, dataloader.StringKey(url))()
 	if err != nil {
 		return film, err
 	}
@@ -38,7 +38,7 @@ func LoadFilms(ctx context.Context, urls []string) (FilmResults, error) {
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
+	data, errs := ldr.LoadMany(ctx, dataloader.NewKeysFromStrings(urls))()
 	results = make([]FilmResult, 0, len(urls))
 
 	for i, d := range data {
@@ -89,7 +89,7 @@ func PrimeFilms(ctx context.Context, page swapi.FilmPage) error {
 	}
 
 	for _, f := range page.Films {
-		ldr.Prime(ctx, f.URL, f)
+		ldr.Prime(ctx, dataloader.StringKey(f.URL), f)
 	}
 
 	return nil
@@ -108,7 +108,7 @@ func newFilmLoader(client filmGetter) dataloader.BatchFunc {
 	return filmLoader{get: client}.loadBatch
 }
 
-func (ldr filmLoader) loadBatch(ctx context.Context, urls []interface{}) []*dataloader.Result {
+func (ldr filmLoader) loadBatch(ctx context.Context, urls dataloader.Keys) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -117,19 +117,13 @@ func (ldr filmLoader) loadBatch(ctx context.Context, urls []interface{}) []*data
 
 	wg.Add(n)
 
-	for i, value := range urls {
-		go func(i int, v interface{}) {
+	for i, url := range urls {
+		go func(i int, url dataloader.Key) {
 			defer wg.Done()
 
-			url, ok := v.(string)
-			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
-				return
-			}
-
-			resp, err := ldr.get.Film(ctx, url)
+			resp, err := ldr.get.Film(ctx, url.String())
 			results[i] = &dataloader.Result{Data: resp, Error: err}
-		}(i, value)
+		}(i, url)
 	}
 
 	wg.Wait()

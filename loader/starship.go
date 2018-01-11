@@ -18,7 +18,7 @@ func LoadStarship(ctx context.Context, url string) (swapi.Starship, error) {
 		return ship, err
 	}
 
-	data, err := ldr.Load(ctx, url)()
+	data, err := ldr.Load(ctx, dataloader.StringKey(url))()
 	if err != nil {
 		return ship, err
 	}
@@ -39,7 +39,7 @@ func LoadStarships(ctx context.Context, urls []string) (StarshipResults, error) 
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
+	data, errs := ldr.LoadMany(ctx, dataloader.NewKeysFromStrings(urls))()
 	results = make([]StarshipResult, 0, len(urls))
 
 	for i, d := range data {
@@ -98,13 +98,13 @@ func PrimeStarships(ctx context.Context, page swapi.StarshipPage) error {
 	}
 
 	for _, s := range page.Starships {
-		ldr.Prime(ctx, s.URL, s)
+		ldr.Prime(ctx, dataloader.StringKey(s.URL), s)
 	}
 
 	return nil
 }
 
-func (ldr StarshipLoader) loadBatch(ctx context.Context, urls []interface{}) []*dataloader.Result {
+func (ldr StarshipLoader) loadBatch(ctx context.Context, urls dataloader.Keys) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -113,19 +113,13 @@ func (ldr StarshipLoader) loadBatch(ctx context.Context, urls []interface{}) []*
 
 	wg.Add(n)
 
-	for i, value := range urls {
-		go func(i int, v interface{}) {
+	for i, url := range urls {
+		go func(i int, url dataloader.Key) {
 			defer wg.Done()
 
-			url, ok := v.(string)
-			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
-				return
-			}
-
-			data, err := ldr.get.Starship(ctx, url)
+			data, err := ldr.get.Starship(ctx, url.String())
 			results[i] = &dataloader.Result{Data: data, Error: err}
-		}(i, value)
+		}(i, url)
 	}
 
 	wg.Wait()

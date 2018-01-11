@@ -81,13 +81,3 @@ func extract(ctx context.Context, k key) (*dataloader.Loader, error) {
 func (k key) String() string {
 	return string(k)
 }
-
-// Copy the string slice elements to an equally sized interface slice.
-// Why this must be done: https://github.com/golang/go/wiki/InterfaceSlice
-func copyStrings(strs []string) []interface{} {
-	slc := make([]interface{}, len(strs))
-	for i, s := range strs {
-		slc[i] = s
-	}
-	return slc
-}

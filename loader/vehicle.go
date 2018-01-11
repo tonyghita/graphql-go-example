@@ -15,7 +15,7 @@ func LoadVehicle(ctx context.Context, url string) (swapi.Vehicle, error) {
 		return swapi.Vehicle{}, err
 	}
 
-	data, err := ldr.Load(ctx, url)()
+	data, err := ldr.Load(ctx, dataloader.StringKey(url))()
 	if err != nil {
 		return swapi.Vehicle{}, err
 	}
@@ -36,7 +36,7 @@ func LoadVehicles(ctx context.Context, urls []string) (VehicleResults, error) {
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
+	data, errs := ldr.LoadMany(ctx, dataloader.NewKeysFromStrings(urls))()
 
 	for i, d := range data {
 		var e error
@@ -80,7 +80,7 @@ func PrimeVehicles(ctx context.Context, page swapi.VehiclePage) error {
 	}
 
 	for _, v := range page.Vehicles {
-		ldr.Prime(ctx, v.URL, v)
+		ldr.Prime(ctx, dataloader.StringKey(v.URL), v)
 	}
 	return nil
 }
@@ -97,7 +97,7 @@ func newVehicleLoader(client vehicleGetter) dataloader.BatchFunc {
 	return VehicleLoader{get: client}.loadBatch
 }
 
-func (ldr VehicleLoader) loadBatch(ctx context.Context, urls []interface{}) []*dataloader.Result {
+func (ldr VehicleLoader) loadBatch(ctx context.Context, urls dataloader.Keys) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -106,19 +106,13 @@ func (ldr VehicleLoader) loadBatch(ctx context.Context, urls []interface{}) []*d
 
 	wg.Add(n)
 
-	for i, value := range urls {
-		go func(i int, v interface{}) {
+	for i, url := range urls {
+		go func(i int, url dataloader.Key) {
 			defer wg.Done()
 
-			url, ok := v.(string)
-			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
-				return
-			}
-
-			data, err := ldr.get.Vehicle(ctx, url)
+			data, err := ldr.get.Vehicle(ctx, url.String())
 			results[i] = &dataloader.Result{Data: data, Error: err}
-		}(i, value)
+		}(i, url)
 	}
 
 	wg.Wait()

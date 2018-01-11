@@ -19,7 +19,7 @@ func LoadPerson(ctx context.Context, url string) (swapi.Person, error) {
 		return person, err
 	}
 
-	data, err := ldr.Load(ctx, url)()
+	data, err := ldr.Load(ctx, dataloader.StringKey(url))()
 	if err != nil {
 		return person, err
 	}
@@ -40,7 +40,7 @@ func LoadPeople(ctx context.Context, urls []string) (PersonResults, error) {
 		return results, err
 	}
 
-	data, errs := ldr.LoadMany(ctx, copyStrings(urls))()
+	data, errs := ldr.LoadMany(ctx, dataloader.NewKeysFromStrings(urls))()
 	for i, d := range data {
 		var e error
 		if errs != nil {
@@ -86,7 +86,7 @@ func PrimePeople(ctx context.Context, page swapi.PersonPage) error {
 	}
 
 	for _, p := range page.People {
-		ldr.Prime(ctx, p.URL, p)
+		ldr.Prime(ctx, dataloader.StringKey(p.URL), p)
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func newPersonLoader(client personGetter) dataloader.BatchFunc {
 	return personLoader{get: client}.loadBatch
 }
 
-func (ldr personLoader) loadBatch(ctx context.Context, urls []interface{}) []*dataloader.Result {
+func (ldr personLoader) loadBatch(ctx context.Context, urls dataloader.Keys) []*dataloader.Result {
 	var (
 		n       = len(urls)
 		results = make([]*dataloader.Result, n)
@@ -114,19 +114,13 @@ func (ldr personLoader) loadBatch(ctx context.Context, urls []interface{}) []*da
 
 	wg.Add(n)
 
-	for i, value := range urls {
-		go func(i int, v interface{}) {
+	for i, url := range urls {
+		go func(i int, url dataloader.Key) {
 			defer wg.Done()
 
-			url, ok := v.(string)
-			if !ok {
-				results[i] = &dataloader.Result{Error: errors.WrongType(url, v)}
-				return
-			}
-
-			data, err := ldr.get.Person(ctx, url)
+			data, err := ldr.get.Person(ctx, url.String())
 			results[i] = &dataloader.Result{Data: data, Error: err}
-		}(i, value)
+		}(i, url)
 	}
 
 	wg.Wait()
