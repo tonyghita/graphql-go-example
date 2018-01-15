@@ -72,16 +72,18 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// The result of authentication should probably be placed on the request context so it can be
 	// passed to resolvers and loaders.
 
-	// Execute the request.
+	// Here, begin request execution...
 	var (
-		ctx       = h.Loaders.Attach(r.Context())
-		responses = make([]*graphql.Response, n)
-		wg        sync.WaitGroup
+		ctx       = h.Loaders.Attach(r.Context()) // Attach dataloaders onto the request context.
+		responses = make([]*graphql.Response, n)  // Allocate a slice large enough for all responses.
+		wg        sync.WaitGroup                  // Use the WaitGroup to wait for all executions to finish.
 	)
 
 	wg.Add(n)
 
 	for i, q := range req.queries {
+		// Loop through the parsed queries from the request.
+		// These queries are executed in separate goroutines so they process in parallel.
 		go func(i int, q Query) {
 			res := h.Schema.Exec(ctx, q.Query, q.OpName, q.Variables)
 
@@ -102,7 +104,8 @@ func (h GraphQL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// However, be mindful that the standard go log package uses a global mutex to protect writes
 	// to stdout. In a log-happy service, you may see service goroutines start to block on that mutex.
 
-	// Marshal the response to JSON.
+	// After we've doctored up our response by filtering internal error messages or adding data to
+	// the 'extensions' field, we marshal the response to JSON.
 	var resp []byte
 	if req.isBatch {
 		resp, err = json.Marshal(responses)
