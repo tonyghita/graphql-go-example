@@ -22,6 +22,6 @@ image: ; $(info $(M) Building application image...)
 	docker build -t graphql-go-example .
 
 container: image ; $(info $(M) Running application container...)
-	docker run -p 127.0.0.1:8000:8000 graphql-go-example:latest
+	docker run -p 8000:8000 graphql-go-example:latest
 
 .PHONY: build clean container dep image schema setup server
