@@ -30,27 +30,27 @@ var graphiql = []byte(`
 	</head>
 	<body>
 		<div id="graphiql" style="height: 100vh;">Loading...</div>
-		<script>		
-			function fetchGQL(params) {		
-				return fetch("/graphql", {		
-					method: "post",		
-					body: JSON.stringify(params),		
-					credentials: "include",		
-				}).then(function (resp) {		
-					return resp.text();		
-				}).then(function (body) {		
-					try {		
-						return JSON.parse(body);		
-					} catch (error) {		
-						return body;		
-					}		
-				});		
-			}		
-		
-			ReactDOM.render(		
-				React.createElement(GraphiQL, {fetcher: fetchGQL}),		
-				document.getElementById("graphiql")		
-			)		
+		<script>
+			function fetchGQL(params) {
+				return fetch("/graphql", {
+					method: "post",
+					body: JSON.stringify(params),
+					credentials: "include",
+				}).then(function (resp) {
+					return resp.text();
+				}).then(function (body) {
+					try {
+						return JSON.parse(body);
+					} catch (error) {
+						return body;
+					}
+				});
+			}
+
+			ReactDOM.render(
+				React.createElement(GraphiQL, {fetcher: fetchGQL}),
+				document.getElementById("graphiql")
+			)
 		</script>
 	</body>
 </html>
