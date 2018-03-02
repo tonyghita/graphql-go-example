@@ -2,7 +2,7 @@ required = ["github.com/jteeuwen/go-bindata"]
 
 [[constraint]]
   branch = "master"
-  name = "github.com/neelance/graphql-go"
+  name = "github.com/graph-gophers/graphql-go"
 
 [[constraint]]
   version = "v5.0.0"
@@ -11,3 +11,7 @@ required = ["github.com/jteeuwen/go-bindata"]
 [[constraint]]
   version = "v0.8.0"
   name = "github.com/pkg/errors"
+
+[prune]
+  non-go = true
+  unused-packages = true

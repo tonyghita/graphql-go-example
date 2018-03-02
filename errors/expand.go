@@ -1,6 +1,6 @@
 package errors
 
-import graphql "github.com/neelance/graphql-go/errors"
+import graphql "github.com/graph-gophers/graphql-go/errors"
 
 type slicer interface {
 	Slice() []error

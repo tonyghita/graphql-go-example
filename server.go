@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	graphql "github.com/neelance/graphql-go"
+	graphql "github.com/graph-gophers/graphql-go"
 
 	"github.com/tonyghita/graphql-go-example/handler"
 	"github.com/tonyghita/graphql-go-example/loader"

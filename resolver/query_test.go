@@ -6,7 +6,7 @@ import (
 	"github.com/tonyghita/graphql-go-example/resolver"
 	"github.com/tonyghita/graphql-go-example/schema"
 
-	graphql "github.com/neelance/graphql-go"
+	graphql "github.com/graph-gophers/graphql-go"
 )
 
 func TestResolversSatisfySchema(t *testing.T) {

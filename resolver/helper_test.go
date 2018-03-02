@@ -3,7 +3,7 @@ package resolver
 import (
 	"testing"
 
-	graphql "github.com/neelance/graphql-go"
+	graphql "github.com/graph-gophers/graphql-go"
 )
 
 func TestParseID(t *testing.T) {

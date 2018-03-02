@@ -10,7 +10,7 @@ import (
 	"github.com/tonyghita/graphql-go-example/loader"
 	"github.com/tonyghita/graphql-go-example/swapi"
 
-	graphql "github.com/neelance/graphql-go"
+	graphql "github.com/graph-gophers/graphql-go"
 )
 
 // The SpeciesResolver resolves the Species type.

@@ -2,14 +2,8 @@
 
 
 [[projects]]
-  name = "github.com/jteeuwen/go-bindata"
-  packages = ["."]
-  revision = "bbd0c6e271208dce66d8fda4bc536453cd27fc4a"
-  version = "v3.0.7"
-
-[[projects]]
   branch = "master"
-  name = "github.com/neelance/graphql-go"
+  name = "github.com/graph-gophers/graphql-go"
   packages = [
     ".",
     "errors",
@@ -25,7 +19,13 @@
     "log",
     "trace"
   ]
-  revision = "beff08417b04a91f0a7618b55786d63eec833b9f"
+  revision = "25d685b0f0943742b2c7a0b8bf383206fb280e34"
+
+[[projects]]
+  name = "github.com/jteeuwen/go-bindata"
+  packages = ["."]
+  revision = "bbd0c6e271208dce66d8fda4bc536453cd27fc4a"
+  version = "v3.0.7"
 
 [[projects]]
   name = "github.com/nicksrandall/dataloader"
@@ -53,11 +53,11 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "c73622c77280266305273cb545f54516ced95b93"
+  revision = "22ae77b79946ea320088417e4d50825671d82d57"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d723aaef390b0938faf74d54007c49ff9bec29585902b03ca8cbca1a04d4fd42"
+  inputs-digest = "02df89942865d3fbdcb0b9154a571bcaea6a71e09a231b74c35ce4c4ab1b6416"
   solver-name = "gps-cdcl"
   solver-version = 1
