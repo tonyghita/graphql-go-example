@@ -1,11 +1,9 @@
-FROM golang:alpine AS build
+FROM golang:buster AS build
 WORKDIR /go/src/github.com/tonyghita/graphql-go-example
 COPY . .
-RUN go version && go env && go build -o /go/bin/example
+RUN go version && go env && go build -o /example
 
-FROM alpine
-RUN apk add --no-cache ca-certificates
-WORKDIR /app
-COPY --from=build /go/bin/example /app/
-ENTRYPOINT ["./example"]
+FROM gcr.io/distroless/base
+COPY --from=build /example /
+ENTRYPOINT ["/example"]
 EXPOSE 8000
