@@ -20,7 +20,7 @@ func NewClient(c *http.Client) *Client {
 		c = http.DefaultClient
 	}
 
-	return &Client{base: "https://swapi.co/api", http: c}
+	return &Client{base: "https://swapi.dev/api", http: c}
 }
 
 func (c *Client) NewRequest(ctx context.Context, url string) (*http.Request, error) {
