@@ -1,14 +1,14 @@
 package graphql
 
 import (
-	"errors"
+	"fmt"
 	"strconv"
 )
 
 // ID represents GraphQL's "ID" scalar type. A custom type may be used instead.
 type ID string
 
-func (_ ID) ImplementsGraphQLType(name string) bool {
+func (ID) ImplementsGraphQLType(name string) bool {
 	return name == "ID"
 }
 
@@ -20,7 +20,7 @@ func (id *ID) UnmarshalGraphQL(input interface{}) error {
 	case int32:
 		*id = ID(strconv.Itoa(int(input)))
 	default:
-		err = errors.New("wrong type")
+		err = fmt.Errorf("wrong type for ID: %T", input)
 	}
 	return err
 }

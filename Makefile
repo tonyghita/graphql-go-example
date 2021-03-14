@@ -6,14 +6,8 @@ build: dep ; $(info $(M) Building project...)
 clean: ; $(info $(M) [TODO] Removing generated files... )
 	$(RM) schema/bindata.go
 
-dep: setup ; $(info $(M) Ensuring vendored dependencies are up-to-date...)
-	dep ensure
-
 schema: dep ; $(info $(M) Embedding schema files into binary...)
 	go generate ./schema
-
-setup: ; $(info $(M) Fetching github.com/golang/dep...)
-	go get github.com/golang/dep/cmd/dep
 
 server: schema ; $(info $(M) Starting development server...)
 	go run server.go
