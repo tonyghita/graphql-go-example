@@ -11,7 +11,7 @@ func TestPlanetLoader(t *testing.T) {
 	t.Run("LoadPlanet", func(t *testing.T) {
 		// TODO: implement.
 
-		ctx, url := context.Background(), "https://swapi.co/api/planet/1"
+		ctx, url := context.Background(), "https://swapi.dev/api/planet/1"
 		loader.LoadPlanet(ctx, url)
 	})
 }

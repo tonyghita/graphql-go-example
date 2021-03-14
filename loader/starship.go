@@ -4,10 +4,10 @@ import (
 	"context"
 	"sync"
 
+	"github.com/graph-gophers/dataloader"
+
 	"github.com/tonyghita/graphql-go-example/errors"
 	"github.com/tonyghita/graphql-go-example/swapi"
-
-	"github.com/nicksrandall/dataloader"
 )
 
 func LoadStarship(ctx context.Context, url string) (swapi.Starship, error) {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nicksrandall/dataloader"
+	"github.com/graph-gophers/dataloader"
 )
 
 // The key type is created so that these values do not collide with other keys that some other

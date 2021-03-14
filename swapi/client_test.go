@@ -25,7 +25,7 @@ func TestClient(t *testing.T) {
 		cases := []struct {
 			input string
 		}{
-			{"https://swapi.co/api/planets/1/"},
+			{"https://swapi.dev/api/planets/1/"},
 			{"/planets/1/"},
 		}
 
@@ -36,7 +36,7 @@ func TestClient(t *testing.T) {
 				t.Fatalf("client.NewRequest(ctx, %q): unexpected error %v", c.input, err)
 			}
 
-			expected := "https://swapi.co/api/planets/1/"
+			expected := "https://swapi.dev/api/planets/1/"
 			actual := r.URL.String()
 			if actual != expected {
 				t.Fatalf("client.NewRequest(ctx, %q): wanted %q, got %q", c.input, expected, actual)
