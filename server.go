@@ -32,13 +32,18 @@ func main() {
 
 	root, err := resolver.NewRoot(c)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("creating root resolver: %s", err)
+	}
+
+	s, err := schema.String()
+	if err != nil {
+		log.Fatalf("reading embedded schema contents: %s", err)
 	}
 
 	// Create the request handler; inject dependencies.
 	h := handler.GraphQL{
 		// Parse and validate schema. Panic if unable to do so.
-		Schema:  graphql.MustParseSchema(schema.String(), root),
+		Schema:  graphql.MustParseSchema(s, root),
 		Loaders: loader.Initialize(c),
 	}
 
@@ -49,7 +54,7 @@ func main() {
 	mux.Handle("/graphql", h) // Register without a trailing slash to avoid redirect.
 
 	// Configure the HTTP server.
-	s := &http.Server{
+	srv := &http.Server{
 		Addr:              addr,
 		Handler:           mux,
 		ReadHeaderTimeout: readHeaderTimeout,
@@ -59,9 +64,9 @@ func main() {
 	}
 
 	// Begin listeing for requests.
-	log.Printf("Listening for requests on %s", s.Addr)
+	log.Printf("Listening for requests on %s", srv.Addr)
 
-	if err = s.ListenAndServe(); err != nil {
+	if err = srv.ListenAndServe(); err != nil {
 		log.Println("server.ListenAndServe:", err)
 	}
 

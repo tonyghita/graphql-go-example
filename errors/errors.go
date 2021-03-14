@@ -2,9 +2,8 @@ package errors
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
-
-	pkgerrors "github.com/pkg/errors"
 )
 
 type Errors []error
@@ -43,9 +42,9 @@ func (e Errors) Slice() []error {
 
 // This is convenience method so we don't have to fight with package imports.
 func New(message string) error {
-	return pkgerrors.New(message)
+	return errors.New(message)
 }
 
 func Errorf(format string, args ...interface{}) error {
-	return pkgerrors.Errorf(format, args)
+	return fmt.Errorf(format, args...)
 }
